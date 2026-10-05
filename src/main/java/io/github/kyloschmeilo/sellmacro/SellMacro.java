@@ -1,6 +1,8 @@
 package io.github.kyloschmeilo.sellmacro;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import net.minecraft.ChatFormatting;
@@ -8,19 +10,23 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 /**
- * Opens the server's /sell GUI, shift-clicks every stack of the selected item into it,
+ * Opens the server's /sell GUI, shift-clicks every stack of the selected items into it,
  * closes the GUI (which sells the items) and opens it again. This repeats until the
- * player closes the /sell GUI themselves.
+ * player closes the /sell GUI themselves or an auto-stop limit is reached.
  */
 public final class SellMacro {
 	/** Server command that opens the sell GUI, without the leading slash. */
@@ -36,8 +42,8 @@ public final class SellMacro {
 	/** Wait after closing the GUI before sending the sell command again. */
 	private static final int REOPEN_DELAY_TICKS = 10;
 
-	public static final int DEFAULT_CLICK_DELAY = 1;
 	public static final int MAX_CLICK_DELAY = 20;
+	public static final int MAX_ITEMS = 9;
 
 	private enum State {
 		IDLE,
@@ -48,7 +54,7 @@ public final class SellMacro {
 	}
 
 	private static State state = State.IDLE;
-	private static Item item;
+	private static final Set<Item> items = new LinkedHashSet<>();
 	private static int timer;
 	private static int openAttempts;
 	private static int containerId = -1;
@@ -57,9 +63,10 @@ public final class SellMacro {
 	private static int movedThisRound;
 	private static int rounds;
 	private static long totalMoved;
+	private static double earned;
+	private static long startedAt;
+	private static float lastHealth;
 	private static boolean closingByMacro;
-	/** Ticks between two shift-clicks, 0 moves everything in the same tick. */
-	private static int clickDelay = DEFAULT_CLICK_DELAY;
 
 	private SellMacro() {
 	}
@@ -68,34 +75,45 @@ public final class SellMacro {
 		return state != State.IDLE;
 	}
 
-	public static int getClickDelay() {
-		return clickDelay;
-	}
-
-	public static void setClickDelay(int ticks) {
-		clickDelay = Math.clamp(ticks, 0, MAX_CLICK_DELAY);
-	}
-
-	public static void start(Item newItem) {
+	/** Starts the macro, returns false if the player may not use the mod or no item was given. */
+	public static boolean start(List<Item> newItems) {
 		reset();
 
-		if (!AllowedPlayers.isAllowed()) {
-			return;
+		if (!AllowedPlayers.isAllowed() || newItems.isEmpty()) {
+			return false;
 		}
 
-		item = newItem;
+		items.addAll(newItems);
+		items.remove(Items.AIR);
+
+		if (items.isEmpty()) {
+			return false;
+		}
+
+		LocalPlayer player = Minecraft.getInstance().player;
+		lastHealth = player != null ? player.getHealth() : 0;
+		startedAt = System.currentTimeMillis();
 		state = State.SEND_COMMAND;
+
+		SellMacroConfig config = SellMacroConfig.get();
+		config.lastItems = items.stream().map(SellMacro::itemId).toList();
+		config.save();
+		return true;
 	}
 
 	public static void stop(Component reason) {
 		LocalPlayer player = Minecraft.getInstance().player;
 
 		if (player != null && state != State.IDLE) {
-			player.sendSystemMessage(prefixed(Component.empty()
+			MutableComponent summary = Component.empty()
 					.append(reason)
-					.append(" (" + rounds + " Runden, " + totalMoved + "x ")
-					.append(itemName())
-					.append(")")));
+					.append(" (" + rounds + " Runden, " + totalMoved + " Items");
+
+			if (earned > 0) {
+				summary.append(", " + Earnings.format(earned) + " verdient");
+			}
+
+			player.sendSystemMessage(prefixed(summary.append(")")));
 		}
 
 		reset();
@@ -103,7 +121,7 @@ public final class SellMacro {
 
 	private static void reset() {
 		state = State.IDLE;
-		item = null;
+		items.clear();
 		timer = 0;
 		openAttempts = 0;
 		containerId = -1;
@@ -111,6 +129,7 @@ public final class SellMacro {
 		movedThisRound = 0;
 		rounds = 0;
 		totalMoved = 0;
+		earned = 0;
 	}
 
 	/**
@@ -133,6 +152,26 @@ public final class SellMacro {
 		}
 	}
 
+	/** Counts money amounts in server messages while the macro runs. */
+	public static void onGameMessage(Component message, boolean overlay) {
+		if (state == State.IDLE || overlay) {
+			return;
+		}
+
+		double amount = Earnings.parse(message.getString());
+
+		if (amount <= 0) {
+			return;
+		}
+
+		earned += amount;
+		double limit = SellMacroConfig.get().moneyLimit;
+
+		if (limit > 0 && earned >= limit) {
+			stop(Component.literal("Geld-Limit von " + Earnings.format(limit) + " erreicht."));
+		}
+	}
+
 	public static void tick(Minecraft client) {
 		if (state == State.IDLE) {
 			return;
@@ -144,6 +183,26 @@ public final class SellMacro {
 			reset();
 			return;
 		}
+
+		float health = player.getHealth();
+
+		if (health < lastHealth && SellMacroConfig.get().stopOnDamage) {
+			// Get the GUI out of the way so the player can react.
+			if (trackedScreen(client, player) != null) {
+				closingByMacro = true;
+
+				try {
+					player.closeContainer();
+				} finally {
+					closingByMacro = false;
+				}
+			}
+
+			stop(Component.literal("Schaden erhalten, Makro beendet.").withStyle(ChatFormatting.RED));
+			return;
+		}
+
+		lastHealth = health;
 
 		switch (state) {
 			case SEND_COMMAND -> tickSendCommand(client, player);
@@ -206,6 +265,7 @@ public final class SellMacro {
 			return;
 		}
 
+		int clickDelay = SellMacroConfig.get().clickDelay;
 		Slot slot;
 
 		while ((slot = nextSlot(screen.getMenu(), player)) != null) {
@@ -250,9 +310,7 @@ public final class SellMacro {
 		if (movedThisRound > 0) {
 			rounds++;
 			totalMoved += movedThisRound;
-			player.sendOverlayMessage(prefixed(Component.literal("Runde " + rounds + ": " + movedThisRound + "x ")
-					.append(itemName())
-					.append(" eingelegt (gesamt " + totalMoved + ")")));
+			player.sendOverlayMessage(prefixed(Component.literal(roundStatus())));
 		}
 
 		movedThisRound = 0;
@@ -260,6 +318,24 @@ public final class SellMacro {
 		containerId = -1;
 		state = State.SEND_COMMAND;
 		timer = REOPEN_DELAY_TICKS;
+
+		int maxRounds = SellMacroConfig.get().maxRounds;
+
+		if (maxRounds > 0 && rounds >= maxRounds) {
+			stop(Component.literal("Runden-Limit von " + maxRounds + " erreicht."));
+		}
+	}
+
+	private static String roundStatus() {
+		StringBuilder status = new StringBuilder("Runde " + rounds + ": " + movedThisRound + " Items (gesamt " + totalMoved + ")");
+
+		if (earned > 0) {
+			double hours = Math.max(System.currentTimeMillis() - startedAt, 1_000) / 3_600_000.0;
+			status.append(" | ").append(Earnings.format(earned)).append(" verdient, ")
+					.append(Earnings.format(earned / hours)).append("/h");
+		}
+
+		return status.toString();
 	}
 
 	/** Any open container GUI that isn't the player's own inventory. */
@@ -281,13 +357,16 @@ public final class SellMacro {
 		return screen != null && screen.getMenu().containerId == containerId ? screen : null;
 	}
 
-	/** Next player inventory slot holding the selected item that wasn't clicked this round. */
+	/** Next player inventory slot holding a selected item that wasn't clicked this round. */
 	private static Slot nextSlot(AbstractContainerMenu menu, LocalPlayer player) {
+		boolean protect = SellMacroConfig.get().protectSpecialItems;
+
 		for (Slot slot : menu.slots) {
 			if (slot.container instanceof Inventory
 					&& !attemptedSlots.contains(slot.index)
 					&& slot.hasItem()
-					&& slot.getItem().getItem() == item
+					&& items.contains(slot.getItem().getItem())
+					&& !(protect && isProtected(slot.getItem()))
 					&& slot.mayPickup(player)) {
 				return slot;
 			}
@@ -296,12 +375,45 @@ public final class SellMacro {
 		return null;
 	}
 
-	public static Component itemName() {
-		return item == null ? Component.literal("?") : itemName(item);
+	/** Renamed or enchanted stacks are usually valuable and never get sold. */
+	public static boolean isProtected(ItemStack stack) {
+		return stack.has(DataComponents.CUSTOM_NAME) || stack.isEnchanted();
+	}
+
+	public static String itemId(Item item) {
+		return BuiltInRegistries.ITEM.getKey(item).toString();
+	}
+
+	/** Resolves an item id like "minecraft:wheat", null if unknown. */
+	public static Item itemById(String id) {
+		Identifier identifier = Identifier.tryParse(id);
+
+		if (identifier == null) {
+			return null;
+		}
+
+		Item item = BuiltInRegistries.ITEM.getValue(identifier);
+		return item == Items.AIR ? null : item;
 	}
 
 	public static Component itemName(Item item) {
 		return new ItemStack(item).getItemName();
+	}
+
+	public static MutableComponent itemNames(Iterable<Item> list) {
+		MutableComponent names = Component.empty();
+		boolean first = true;
+
+		for (Item item : list) {
+			if (!first) {
+				names.append(", ");
+			}
+
+			names.append(itemName(item));
+			first = false;
+		}
+
+		return names;
 	}
 
 	public static MutableComponent prefixed(Component message) {

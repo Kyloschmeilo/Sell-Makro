@@ -1,14 +1,17 @@
 ## Sell Macro für Minecraft 26.2 (Fabric)
 
-Füllt die `/sell` GUI des Servers immer wieder mit einem Item-Typ, bis du sie selbst schließt.
+Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
+Nur für freigeschaltete Spieler: kyloschmeilo, _danilo, genius187, Mtb1304.
 
-### Neu in 1.1.0
-- Nur freigeschaltete Spieler können die Mod nutzen: kyloschmeilo, _danilo, genius187, Mtb1304
-
-### Befehle
-- `/sellmacro <item>`: Makro starten, z. B. `/sellmacro wheat`
-- `/sellmacro stop`: Makro sofort beenden
-- `/sellmacro delay <0-20>`: Ticks zwischen zwei Shift-Klicks (Standard 1)
+### Neu in 1.2.0
+- Mehrere Items auf einmal: `/sellmacro wheat carrot potato` (bis zu 9)
+- Presets: `/sellmacro preset save farm`, danach `/sellmacro preset farm`
+- `/sellmacro hand` verkauft das Item in der Hand
+- Taste **K** (änderbar unter Steuerung → Sell Macro): Makro starten/stoppen, startet die zuletzt genutzten Items
+- Verdienst-Anzeige: Geldbeträge aus den Server-Nachrichten werden gezählt, mit Gesamtsumme und Betrag pro Stunde
+- Umbenannte oder verzauberte Items werden nie verkauft (`/sellmacro protect false` zum Abschalten)
+- Auto-Stopp bei Schaden, nach X Runden (`/sellmacro limit rounds 50`) oder ab einem Geldbetrag (`/sellmacro limit money 100000`)
+- Einstellungen und Presets bleiben in `config/sellmacro.json` gespeichert
 
 ### Installation
 - Fabric Loader ≥ 0.19.5 und Fabric API für 26.2

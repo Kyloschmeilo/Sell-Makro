@@ -17,12 +17,30 @@ in deinem Inventar landen.
 
 | Befehl | Beschreibung |
 | --- | --- |
-| `/sellmacro <item>` | Makro mit diesem Item starten (Tab-Vervollständigung funktioniert) |
+| `/sellmacro <item> [item ...]` | Makro mit bis zu 9 Items starten (Tab-Vervollständigung funktioniert) |
+| `/sellmacro hand` | Item in der Hand verkaufen |
 | `/sellmacro stop` | Makro sofort beenden |
-| `/sellmacro delay` | Aktuelle Verzögerung zwischen zwei Shift-Klicks anzeigen |
-| `/sellmacro delay <0-20>` | Verzögerung in Ticks setzen (`0` = alles im selben Tick, Standard `1`) |
+| `/sellmacro preset save <name>` | Zuletzt gestartete Items als Preset speichern |
+| `/sellmacro preset <name>` | Preset starten |
+| `/sellmacro preset list` / `delete <name>` | Presets anzeigen / löschen |
+| `/sellmacro delay <0-20>` | Ticks zwischen zwei Shift-Klicks (`0` = alles im selben Tick, Standard `1`) |
+| `/sellmacro protect <true\|false>` | Umbenannte/verzauberte Items nie verkaufen (Standard an) |
+| `/sellmacro damagestop <true\|false>` | Bei Schaden sofort stoppen und die GUI schließen (Standard an) |
+| `/sellmacro limit rounds <n>` | Nach n Runden stoppen (`0` = aus) |
+| `/sellmacro limit money <betrag>` | Ab diesem Verdienst stoppen (`0` = aus) |
+| `/sellmacro earnings test <nachricht>` | Prüfen, welcher Betrag in einer Chat-Nachricht erkannt wird |
+| `/sellmacro earnings pattern <regex>` / `reset` | Eigenes Muster für die Geld-Erkennung (erste Gruppe = Betrag) |
+| `/sellmacro settings` | Alle Einstellungen anzeigen |
 
-Falls der Server dich wegen zu schneller Klicks kickt, die Verzögerung erhöhen.
+**Taste K** (änderbar unter Steuerung → Sell Macro) startet/stoppt das Makro mit den zuletzt genutzten Items,
+beim ersten Mal mit dem Item in der Hand.
+
+**Verdienst:** Während das Makro läuft, werden Geldbeträge aus Server-Nachrichten (z. B. `$1,234`, `500 Coins`)
+zusammengezählt und mit Betrag pro Stunde angezeigt. Erkennt die Mod die Verkaufsnachricht deines Servers nicht,
+mit `/sellmacro earnings test` prüfen und notfalls ein eigenes Muster setzen.
+
+Falls der Server dich wegen zu schneller Klicks kickt, die Verzögerung erhöhen. Einstellungen und Presets werden in
+`config/sellmacro.json` gespeichert.
 
 ## Download
 
