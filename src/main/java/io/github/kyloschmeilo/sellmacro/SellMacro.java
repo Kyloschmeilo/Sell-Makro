@@ -78,6 +78,11 @@ public final class SellMacro {
 
 	public static void start(Item newItem) {
 		reset();
+
+		if (!AllowedPlayers.isAllowed()) {
+			return;
+		}
+
 		item = newItem;
 		state = State.SEND_COMMAND;
 	}

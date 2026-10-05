@@ -2,6 +2,8 @@ package io.github.kyloschmeilo.sellmacro;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -22,6 +24,14 @@ public final class SellMacroClient implements ClientModInitializer {
 	}
 
 	private static void registerCommands(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandBuildContext buildContext) {
+		if (!AllowedPlayers.isAllowed()) {
+			dispatcher.register(ClientCommands.literal("sellmacro")
+					.executes(SellMacroClient::notAllowed)
+					.then(ClientCommands.argument("args", StringArgumentType.greedyString())
+							.executes(SellMacroClient::notAllowed)));
+			return;
+		}
+
 		dispatcher.register(ClientCommands.literal("sellmacro")
 				.then(ClientCommands.literal("stop")
 						.executes(context -> {
@@ -56,5 +66,10 @@ public final class SellMacroClient implements ClientModInitializer {
 									.append(Component.literal("(/sellmacro stop)").withStyle(ChatFormatting.GRAY))));
 							return 1;
 						})));
+	}
+
+	private static int notAllowed(CommandContext<FabricClientCommandSource> context) {
+		context.getSource().sendError(SellMacro.prefixed(Component.literal("Du bist nicht berechtigt, diese Mod zu nutzen.")));
+		return 0;
 	}
 }
