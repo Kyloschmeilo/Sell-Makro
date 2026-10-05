@@ -1,28 +1,23 @@
-# Builds the mod and attaches the jar to a GitHub release.
+# Builds the mod and publishes the jar as a GitHub release.
+# Run manually (Actions -> release -> Run workflow) to release the version from gradle.properties,
+# or publish a release in the web UI to have the jar attached to it.
 name: release
 on:
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag to attach the jar to'
-        required: true
-        default: 'v1.0.0'
 
 permissions:
   contents: write
 
 jobs:
-  upload-jar:
+  release:
     runs-on: ubuntu-24.04
-    env:
-      TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
-      - name: checkout release tag
+      - name: checkout repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ env.TAG }}
+          ref: ${{ github.event.release.tag_name || github.sha }}
       - name: validate gradle wrapper
         uses: gradle/actions/wrapper-validation@v6
       - name: setup jdk
@@ -34,7 +29,17 @@ jobs:
         run: chmod +x ./gradlew
       - name: build
         run: ./gradlew build
-      - name: upload jar to release
+      - name: publish jar
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$TAG" build/libs/*.jar --clobber
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [ -n "$RELEASE_TAG" ]; then
+            gh release upload "$RELEASE_TAG" build/libs/*.jar --clobber
+          else
+            version=$(grep '^version=' gradle.properties | cut -d= -f2)
+            gh release create "v$version" build/libs/*.jar \
+              --target "$GITHUB_SHA" \
+              --title "Sell Macro $version" \
+              --notes-file .github/release-notes.md
+          fi
