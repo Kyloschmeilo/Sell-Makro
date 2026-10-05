@@ -9,7 +9,10 @@ import net.minecraft.client.Minecraft;
 public final class AllowedPlayers {
 	// Add player names here (case does not matter).
 	private static final Set<String> NAMES = Set.of(
-			"SPIELERNAME"
+			"kyloschmeilo",
+			"_danilo",
+			"genius187",
+			"Mtb1304"
 	);
 
 	private AllowedPlayers() {
