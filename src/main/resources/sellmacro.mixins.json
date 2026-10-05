@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "io.github.kyloschmeilo.sellmacro.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"LocalPlayerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

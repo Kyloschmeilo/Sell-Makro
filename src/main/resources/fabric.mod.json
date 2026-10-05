@@ -1,0 +1,28 @@
+{
+	"schemaVersion": 1,
+	"id": "sellmacro",
+	"version": "${version}",
+	"name": "Sell Macro",
+	"description": "Füllt die /sell GUI des Servers immer wieder mit einem Item-Typ, bis du sie selbst schließt. Befehl: /sellmacro <item>",
+	"authors": [
+		"Kyloschmeilo"
+	],
+	"contact": {
+		"sources": "https://github.com/Kyloschmeilo/Sell-Makro"
+	},
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"io.github.kyloschmeilo.sellmacro.SellMacroClient"
+		]
+	},
+	"mixins": [
+		"sellmacro.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
