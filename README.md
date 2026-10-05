@@ -24,13 +24,16 @@ in deinem Inventar landen.
 
 Falls der Server dich wegen zu schneller Klicks kickt, die Verzögerung erhöhen.
 
+## Download
+
+Die fertige `sellmacro-<version>.jar` gibt es unter
+[Releases](https://github.com/Kyloschmeilo/Sell-Makro/releases).
+
 ## Installation
 
 Benötigt [Fabric Loader](https://fabricmc.net/use/) ≥ 0.19.5, [Fabric API](https://modrinth.com/mod/fabric-api)
 für 26.2 und Java 25. Die `sellmacro-<version>.jar` in den `mods` Ordner legen. Die Mod läuft nur auf dem
 Client, auf dem Server muss nichts installiert werden.
-
-Fertige Jars gibt es bei jedem Push unter **Actions → build → Artifacts → SellMacro**.
 
 ## Selbst bauen
 
