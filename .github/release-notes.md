@@ -2,6 +2,10 @@
 
 Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
 
+### Neu in 1.2.1
+- Geldbeträge mit Tausender-Punkten: `1.234.567` statt `1.23M`
+- Der Wert pro Stunde ist jetzt der hochgerechnete Schnitt pro Minute seit dem Start (die erste Minute zählt voll, damit ein schneller erster Verkauf keinen riesigen Stundenwert ergibt). Angezeigt werden `/min` und `/h`, beim Stoppen der Schnitt pro Stunde.
+
 ### Neu in 1.2.0
 - Mehrere Items auf einmal: `/sellmacro wheat carrot potato` (bis zu 9)
 - Presets: `/sellmacro preset save farm`, danach `/sellmacro preset farm`

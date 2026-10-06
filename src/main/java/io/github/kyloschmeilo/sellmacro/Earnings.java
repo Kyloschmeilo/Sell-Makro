@@ -1,5 +1,7 @@
 package io.github.kyloschmeilo.sellmacro;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -113,15 +115,18 @@ public final class Earnings {
 		}
 	}
 
+	/** German number format: dots between thousands, comma before cents, e.g. 1.234.567,5. */
 	public static String format(double amount) {
-		if (amount >= 1_000_000) {
-			return String.format(Locale.ROOT, "%.2fM", amount / 1_000_000);
-		}
+		DecimalFormat format = new DecimalFormat("#,##0.##", DecimalFormatSymbols.getInstance(Locale.GERMANY));
+		return format.format(amount);
+	}
 
-		if (amount >= 10_000) {
-			return String.format(Locale.ROOT, "%.1fk", amount / 1_000);
-		}
-
-		return amount == Math.rint(amount) ? String.valueOf((long) amount) : String.format(Locale.ROOT, "%.2f", amount);
+	/**
+	 * Average earnings per minute since the start, extrapolated to one hour. The first minute
+	 * counts as a full minute, so a quick first sale doesn't show a huge hourly rate.
+	 */
+	public static double perHour(double earned, long elapsedMillis) {
+		double minutes = Math.max(elapsedMillis / 60_000.0, 1);
+		return earned / minutes * 60;
 	}
 }

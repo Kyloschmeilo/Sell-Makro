@@ -110,7 +110,8 @@ public final class SellMacro {
 					.append(" (" + rounds + " Runden, " + totalMoved + " Items");
 
 			if (earned > 0) {
-				summary.append(", " + Earnings.format(earned) + " verdient");
+				summary.append(", " + Earnings.format(earned) + " verdient, Schnitt "
+						+ Earnings.format(Earnings.perHour(earned, System.currentTimeMillis() - startedAt)) + "/h");
 			}
 
 			player.sendSystemMessage(prefixed(summary.append(")")));
@@ -330,9 +331,10 @@ public final class SellMacro {
 		StringBuilder status = new StringBuilder("Runde " + rounds + ": " + movedThisRound + " Items (gesamt " + totalMoved + ")");
 
 		if (earned > 0) {
-			double hours = Math.max(System.currentTimeMillis() - startedAt, 1_000) / 3_600_000.0;
+			double perHour = Earnings.perHour(earned, System.currentTimeMillis() - startedAt);
 			status.append(" | ").append(Earnings.format(earned)).append(" verdient, ")
-					.append(Earnings.format(earned / hours)).append("/h");
+					.append(Earnings.format(perHour / 60)).append("/min = ")
+					.append(Earnings.format(perHour)).append("/h");
 		}
 
 		return status.toString();
