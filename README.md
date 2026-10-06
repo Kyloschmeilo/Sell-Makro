@@ -23,7 +23,6 @@ in deinem Inventar landen.
 | `/sellmacro preset save <name>` | Zuletzt gestartete Items als Preset speichern |
 | `/sellmacro preset <name>` | Preset starten |
 | `/sellmacro preset list` / `delete <name>` | Presets anzeigen / löschen |
-| `/sellmacro background <true\|false>` | Hintergrund-Modus: GUI unsichtbar, Maus und Bewegung bleiben frei (Standard an) |
 | `/sellmacro delay <0-20>` | Ticks zwischen zwei Shift-Klicks (`0` = alles im selben Tick, Standard `1`) |
 | `/sellmacro protect <true\|false>` | Umbenannte/verzauberte Items nie verkaufen (Standard an) |
 | `/sellmacro damagestop <true\|false>` | Bei Schaden sofort stoppen und die GUI schließen (Standard an) |
@@ -32,11 +31,6 @@ in deinem Inventar landen.
 | `/sellmacro earnings test <nachricht>` | Prüfen, welcher Betrag in einer Chat-Nachricht erkannt wird |
 | `/sellmacro earnings pattern <regex>` / `reset` | Eigenes Muster für die Geld-Erkennung (erste Gruppe = Betrag) |
 | `/sellmacro settings` | Alle Einstellungen anzeigen |
-
-**Hintergrund-Modus:** Standardmäßig wird die `/sell` GUI gar nicht angezeigt, sondern unsichtbar im Hintergrund
-befüllt. Du kannst dich währenddessen normal bewegen und umschauen. Weil es nichts zu schließen gibt, stoppst du das
-Makro dann mit Taste K oder `/sellmacro stop`. Mit `/sellmacro background false` siehst du die GUI wieder und stoppst
-durch Schließen.
 
 **Taste K** (änderbar unter Steuerung → Sell Macro) startet/stoppt das Makro mit den zuletzt genutzten Items,
 beim ersten Mal mit dem Item in der Hand.

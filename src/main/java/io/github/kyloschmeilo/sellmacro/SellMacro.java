@@ -7,14 +7,13 @@ import java.util.Set;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -68,8 +67,6 @@ public final class SellMacro {
 	private static long startedAt;
 	private static float lastHealth;
 	private static boolean closingByMacro;
-	/** Whether the sell GUI of the current round is open in the background, without a screen. */
-	private static boolean hiddenRound;
 
 	private SellMacro() {
 	}
@@ -124,7 +121,6 @@ public final class SellMacro {
 
 	private static void reset() {
 		state = State.IDLE;
-		hiddenRound = false;
 		items.clear();
 		timer = 0;
 		openAttempts = 0;
@@ -141,9 +137,7 @@ public final class SellMacro {
 	 * (Esc, inventory key, death, ...). Closes sent by the server do not go through it.
 	 */
 	public static void onClientCloseContainer(int closedContainerId) {
-		// In background mode the player never sees the sell GUI, so any close (e.g. of their own
-		// inventory) is not meant to stop the macro. The hotkey or /sellmacro stop does that.
-		if (closingByMacro || closedContainerId == 0 || hiddenRound || SellMacroConfig.get().backgroundMode) {
+		if (closingByMacro || closedContainerId == 0) {
 			return;
 		}
 
@@ -194,8 +188,14 @@ public final class SellMacro {
 
 		if (health < lastHealth && SellMacroConfig.get().stopOnDamage) {
 			// Get the GUI out of the way so the player can react.
-			if (trackedMenu(player) != null) {
-				closeSellGui(player);
+			if (trackedScreen(client, player) != null) {
+				closingByMacro = true;
+
+				try {
+					player.closeContainer();
+				} finally {
+					closingByMacro = false;
+				}
 			}
 
 			stop(Component.literal("Schaden erhalten, Makro beendet.").withStyle(ChatFormatting.RED));
@@ -221,11 +221,7 @@ public final class SellMacro {
 		}
 
 		// Don't replace a screen the player opened in the meantime, e.g. the chat to type /sellmacro stop.
-		// In background mode the sell GUI never shows up, so only container screens (own inventory,
-		// chests) have to be waited for, because their clicks would go to the wrong container.
-		Screen screen = client.gui.screen();
-
-		if (screen != null && (!SellMacroConfig.get().backgroundMode || screen instanceof AbstractContainerScreen<?>)) {
+		if (client.gui.screen() != null) {
 			return;
 		}
 
@@ -236,11 +232,10 @@ public final class SellMacro {
 	}
 
 	private static void tickWaitForGui(Minecraft client, LocalPlayer player) {
-		AbstractContainerMenu menu = openSellMenu(player);
+		AbstractContainerScreen<?> screen = openContainerScreen(client, player);
 
-		if (menu != null) {
-			containerId = menu.containerId;
-			hiddenRound = !(client.gui.screen() instanceof AbstractContainerScreen<?> screen && screen.getMenu() == menu);
+		if (screen != null) {
+			containerId = screen.getMenu().containerId;
 			state = State.FILL;
 			timer = SYNC_DELAY_TICKS;
 			openAttempts = 0;
@@ -257,9 +252,9 @@ public final class SellMacro {
 	}
 
 	private static void tickFill(Minecraft client, LocalPlayer player) {
-		AbstractContainerMenu menu = trackedMenu(player);
+		AbstractContainerScreen<?> screen = trackedScreen(client, player);
 
-		if (menu == null) {
+		if (screen == null) {
 			// Closed without LocalPlayer#closeContainer, so the server closed it: just open it again.
 			finishRound(player);
 			return;
@@ -273,7 +268,7 @@ public final class SellMacro {
 		int clickDelay = SellMacroConfig.get().clickDelay;
 		Slot slot;
 
-		while ((slot = nextSlot(menu, player)) != null) {
+		while ((slot = nextSlot(screen.getMenu(), player)) != null) {
 			attemptedSlots.add(slot.index);
 			movedThisRound += slot.getItem().getCount();
 			client.gameMode.handleContainerInput(containerId, slot.index, 0, ContainerInput.QUICK_MOVE, player);
@@ -293,13 +288,19 @@ public final class SellMacro {
 	}
 
 	private static void tickClose(Minecraft client, LocalPlayer player) {
-		if (trackedMenu(player) != null) {
+		if (trackedScreen(client, player) != null) {
 			if (timer > 0) {
 				timer--;
 				return;
 			}
 
-			closeSellGui(player);
+			closingByMacro = true;
+
+			try {
+				player.closeContainer();
+			} finally {
+				closingByMacro = false;
+			}
 		}
 
 		finishRound(player);
@@ -315,7 +316,6 @@ public final class SellMacro {
 		movedThisRound = 0;
 		attemptedSlots.clear();
 		containerId = -1;
-		hiddenRound = false;
 		state = State.SEND_COMMAND;
 		timer = REOPEN_DELAY_TICKS;
 
@@ -338,50 +338,23 @@ public final class SellMacro {
 		return status.toString();
 	}
 
-	/** Any open container that isn't the player's own inventory, shown or not. */
-	private static AbstractContainerMenu openSellMenu(LocalPlayer player) {
-		AbstractContainerMenu menu = player.containerMenu;
-		return menu != player.inventoryMenu && menu.containerId != 0 ? menu : null;
+	/** Any open container GUI that isn't the player's own inventory. */
+	private static AbstractContainerScreen<?> openContainerScreen(Minecraft client, LocalPlayer player) {
+		if (client.gui.screen() instanceof AbstractContainerScreen<?> screen
+				&& !(screen instanceof CreativeModeInventoryScreen)
+				&& screen.getMenu() == player.containerMenu
+				&& player.containerMenu != player.inventoryMenu
+				&& player.containerMenu.containerId != 0) {
+			return screen;
+		}
+
+		return null;
 	}
 
 	/** The sell GUI that was opened this round, if it is still open. */
-	private static AbstractContainerMenu trackedMenu(LocalPlayer player) {
-		AbstractContainerMenu menu = openSellMenu(player);
-		return menu != null && menu.containerId == containerId ? menu : null;
-	}
-
-	/** Closes the sell GUI, which makes the server sell its contents. */
-	private static void closeSellGui(LocalPlayer player) {
-		if (hiddenRound) {
-			// No screen to close: only tell the server and drop the menu, so a screen the player
-			// opened in the meantime (chat, pause menu) stays open.
-			player.connection.send(new ServerboundContainerClosePacket(containerId));
-			player.containerMenu = player.inventoryMenu;
-			return;
-		}
-
-		closingByMacro = true;
-
-		try {
-			player.closeContainer();
-		} finally {
-			closingByMacro = false;
-		}
-	}
-
-	/**
-	 * Called from {@code Gui#setScreen}: in background mode the sell GUI opened by the macro is not
-	 * shown, so the mouse stays in the game. The container itself stays open for the macro.
-	 */
-	public static boolean shouldHideScreen(Screen screen) {
-		LocalPlayer player = Minecraft.getInstance().player;
-
-		return state == State.WAIT_FOR_GUI
-				&& SellMacroConfig.get().backgroundMode
-				&& player != null
-				&& screen instanceof AbstractContainerScreen<?> containerScreen
-				&& containerScreen.getMenu() == player.containerMenu
-				&& openSellMenu(player) != null;
+	private static AbstractContainerScreen<?> trackedScreen(Minecraft client, LocalPlayer player) {
+		AbstractContainerScreen<?> screen = openContainerScreen(client, player);
+		return screen != null && screen.getMenu().containerId == containerId ? screen : null;
 	}
 
 	/** Next player inventory slot holding a selected item that wasn't clicked this round. */

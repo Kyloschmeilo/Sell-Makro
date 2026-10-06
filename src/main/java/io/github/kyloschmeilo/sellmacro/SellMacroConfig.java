@@ -26,8 +26,6 @@ public final class SellMacroConfig {
 			"(?i)(?:\\$\\s?([0-9][0-9.,]*\\s?[kmb]?)|([0-9][0-9.,]*\\s?[kmb]?)\\s?(?:\\$|€|coins?|münzen|dollar))";
 
 	public int clickDelay = 1;
-	/** Keep the sell GUI hidden while the macro runs, so the mouse can still be used in game. */
-	public boolean backgroundMode = true;
 	/** Never sell stacks that are renamed or enchanted. */
 	public boolean protectSpecialItems = true;
 	public boolean stopOnDamage = true;
