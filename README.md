@@ -61,8 +61,3 @@ Client, auf dem Server muss nichts installiert werden.
 
 Die Jar liegt danach in `build/libs/`.
 
-## Erlaubte Spieler
-
-Nur Spieler, deren Name in
-[`AllowedPlayers.java`](src/main/java/io/github/kyloschmeilo/sellmacro/AllowedPlayers.java) steht, können die
-Mod nutzen. Alle anderen bekommen bei `/sellmacro` nur eine Fehlermeldung. Nach dem Ändern der Liste die Jar neu bauen.
