@@ -32,9 +32,6 @@ in deinem Inventar landen.
 | `/sellmacro earnings pattern <regex>` / `reset` | Eigenes Muster für die Geld-Erkennung (erste Gruppe = Betrag) |
 | `/sellmacro settings` | Alle Einstellungen anzeigen |
 
-**Raus-Tabben:** Während das Makro läuft, kannst du Minecraft in den Hintergrund schicken (Alt+Tab) und etwas anderes
-machen. Das Pausemenü, das Minecraft sonst beim Fokusverlust öffnet, wird dann übersprungen.
-
 **Taste K** (änderbar unter Steuerung → Sell Macro) startet/stoppt das Makro mit den zuletzt genutzten Items,
 beim ersten Mal mit dem Item in der Hand.
 
@@ -63,4 +60,3 @@ Client, auf dem Server muss nichts installiert werden.
 ```
 
 Die Jar liegt danach in `build/libs/`.
-

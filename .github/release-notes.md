@@ -2,10 +2,6 @@
 
 Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
 
-### Neu in 1.4.0
-- Raus-Tabben funktioniert: Solange das Makro läuft, öffnet Minecraft beim Wechsel in ein anderes Fenster nicht mehr das Pausemenü, das Makro hat vorher dadurch angehalten. Die /sell GUI bleibt in Minecraft normal sichtbar.
-- Der Hintergrund-Modus aus 1.3.0 ist wieder entfernt.
-
 ### Neu in 1.2.0
 - Mehrere Items auf einmal: `/sellmacro wheat carrot potato` (bis zu 9)
 - Presets: `/sellmacro preset save farm`, danach `/sellmacro preset farm`
