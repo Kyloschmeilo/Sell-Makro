@@ -3,6 +3,7 @@
 	"package": "io.github.kyloschmeilo.sellmacro.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
+		"GuiMixin",
 		"LocalPlayerMixin"
 	],
 	"injectors": {

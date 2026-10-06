@@ -3,6 +3,9 @@
 Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
 Nur für freigeschaltete Spieler: kyloschmeilo, _danilo, genius187, Mtb1304.
 
+### Neu in 1.3.0
+- Hintergrund-Modus (Standard an): Die /sell GUI wird unsichtbar im Hintergrund befüllt, du kannst dich währenddessen normal umschauen, laufen und die Maus benutzen. Stoppen mit Taste K oder `/sellmacro stop`. Mit `/sellmacro background false` wieder wie vorher (GUI sichtbar, Stopp durch Schließen).
+
 ### Neu in 1.2.0
 - Mehrere Items auf einmal: `/sellmacro wheat carrot potato` (bis zu 9)
 - Presets: `/sellmacro preset save farm`, danach `/sellmacro preset farm`

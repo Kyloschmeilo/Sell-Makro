@@ -142,6 +142,19 @@ public final class SellMacroClient implements ClientModInitializer {
 									config.save();
 									return feedback(context, "Verzögerung zwischen zwei Klicks auf " + config.clickDelay + " Ticks gesetzt.");
 								})))
+				.then(ClientCommands.literal("background")
+						.executes(context -> feedback(context, "Hintergrund-Modus (GUI unsichtbar, Maus frei): " + onOff(SellMacroConfig.get().backgroundMode)))
+						.then(ClientCommands.argument("enabled", BoolArgumentType.bool())
+								.executes(context -> {
+									if (SellMacro.isRunning()) {
+										return error(context, "Stoppe zuerst das Makro.");
+									}
+
+									SellMacroConfig config = SellMacroConfig.get();
+									config.backgroundMode = BoolArgumentType.getBool(context, "enabled");
+									config.save();
+									return feedback(context, "Hintergrund-Modus (GUI unsichtbar, Maus frei): " + onOff(config.backgroundMode));
+								})))
 				.then(ClientCommands.literal("protect")
 						.executes(context -> feedback(context, "Schutz für umbenannte/verzauberte Items: " + onOff(SellMacroConfig.get().protectSpecialItems)))
 						.then(ClientCommands.argument("enabled", BoolArgumentType.bool())
@@ -293,6 +306,7 @@ public final class SellMacroClient implements ClientModInitializer {
 		SellMacroConfig config = SellMacroConfig.get();
 		feedback(context, "Einstellungen:");
 		feedback(context, "  Klick-Verzögerung: " + config.clickDelay + " Ticks");
+		feedback(context, "  Hintergrund-Modus: " + onOff(config.backgroundMode));
 		feedback(context, "  Schutz für umbenannte/verzauberte Items: " + onOff(config.protectSpecialItems));
 		feedback(context, "  Stopp bei Schaden: " + onOff(config.stopOnDamage));
 		feedback(context, "  Limits: " + limitsText());
@@ -307,6 +321,7 @@ public final class SellMacroClient implements ClientModInitializer {
 				"/sellmacro stop - Makro beenden",
 				"/sellmacro preset save|delete|list|<name> - Item-Listen speichern und starten",
 				"/sellmacro delay <0-20> - Ticks zwischen zwei Klicks",
+				"/sellmacro background <true|false> - GUI unsichtbar im Hintergrund, Maus bleibt frei",
 				"/sellmacro protect <true|false> - umbenannte/verzauberte Items nie verkaufen",
 				"/sellmacro damagestop <true|false> - bei Schaden stoppen",
 				"/sellmacro limit rounds|money <wert> - automatisch stoppen (0 = aus)",
@@ -339,8 +354,8 @@ public final class SellMacroClient implements ClientModInitializer {
 
 		output.accept(SellMacro.prefixed(Component.literal("Verkaufe ")
 				.append(SellMacro.itemNames(items))
-				.append(" bis du die /sell GUI schließt. ")
-				.append(Component.literal("(/sellmacro stop)").withStyle(ChatFormatting.GRAY))));
+				.append(SellMacroConfig.get().backgroundMode ? " im Hintergrund. " : " bis du die /sell GUI schließt. ")
+				.append(Component.literal("(Stoppen: Taste K oder /sellmacro stop)").withStyle(ChatFormatting.GRAY))));
 		return true;
 	}
 
