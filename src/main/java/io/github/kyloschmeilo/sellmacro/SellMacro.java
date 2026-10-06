@@ -7,6 +7,8 @@ import java.util.Set;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.player.LocalPlayer;
@@ -221,7 +223,10 @@ public final class SellMacro {
 		}
 
 		// Don't replace a screen the player opened in the meantime, e.g. the chat to type /sellmacro stop.
-		if (client.gui.screen() != null) {
+		// A pause menu that only opened because the window is in the background (alt-tab) is fine.
+		Screen screen = client.gui.screen();
+
+		if (screen != null && !(screen instanceof PauseScreen && !client.isWindowActive())) {
 			return;
 		}
 

@@ -3,7 +3,8 @@
 	"package": "io.github.kyloschmeilo.sellmacro.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
-		"LocalPlayerMixin"
+		"LocalPlayerMixin",
+		"MinecraftMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
