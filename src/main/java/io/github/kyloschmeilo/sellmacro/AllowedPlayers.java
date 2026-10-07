@@ -12,7 +12,8 @@ public final class AllowedPlayers {
 			"kyloschmeilo",
 			"_danilo",
 			"genius187",
-			"Mtb1304"
+			"Mtb1304",
+			"67Sigmaligma"
 	);
 
 	private AllowedPlayers() {

@@ -2,6 +2,9 @@
 
 Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
 
+### Neu in 1.2.3
+- Ein weiterer Spieler ist freigeschaltet.
+
 ### Neu in 1.2.2
 - Verkauft jetzt über den grünen Haken in der /sell GUI: Die GUI bleibt offen und wird nur geleert, statt sie jede Runde zu schließen und mit `/sell` neu zu öffnen. Das sind viel weniger Pakete, also weniger Kick-Gefahr. Der Knopf wird automatisch erkannt. Ohne Knopf oder mit `/sellmacro confirm false` läuft es wie bisher.
 
