@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -41,6 +42,12 @@ public final class SellMacro {
 	private static final int CLOSE_DELAY_TICKS = 2;
 	/** Wait after closing the GUI before sending the sell command again. */
 	private static final int REOPEN_DELAY_TICKS = 10;
+	/** Wait after clicking the confirm button so the server can sell and empty the GUI. */
+	private static final int CONFIRM_DELAY_TICKS = 10;
+	/** Names that mark the confirm button of a sell GUI. */
+	private static final Pattern CONFIRM_NAME = Pattern.compile("(?i)verkauf|bestätig|confirm|sell|annehm|accept|fertig|✔|✓");
+	private static final int CONFIRM_UNKNOWN = -2;
+	private static final int NO_CONFIRM = -1;
 
 	public static final int MAX_CLICK_DELAY = 20;
 	public static final int MAX_ITEMS = 9;
@@ -67,6 +74,8 @@ public final class SellMacro {
 	private static long startedAt;
 	private static float lastHealth;
 	private static boolean closingByMacro;
+	/** Menu slot of the green confirm button in the current GUI, or NO_CONFIRM / CONFIRM_UNKNOWN. */
+	private static int confirmSlot = CONFIRM_UNKNOWN;
 
 	private SellMacro() {
 	}
@@ -237,6 +246,7 @@ public final class SellMacro {
 
 		if (screen != null) {
 			containerId = screen.getMenu().containerId;
+			confirmSlot = CONFIRM_UNKNOWN;
 			state = State.FILL;
 			timer = SYNC_DELAY_TICKS;
 			openAttempts = 0;
@@ -264,6 +274,11 @@ public final class SellMacro {
 		if (timer > 0) {
 			timer--;
 			return;
+		}
+
+		if (confirmSlot == CONFIRM_UNKNOWN) {
+			// The GUI contents arrived during the sync delay, so the button can be looked for now.
+			confirmSlot = SellMacroConfig.get().useConfirmButton ? findConfirmSlot(screen.getMenu()) : NO_CONFIRM;
 		}
 
 		int clickDelay = SellMacroConfig.get().clickDelay;
@@ -295,6 +310,17 @@ public final class SellMacro {
 				return;
 			}
 
+			if (confirmSlot >= 0) {
+				// Selling via the confirm button keeps the GUI open: no new /sell command needed.
+				client.gameMode.handleContainerInput(containerId, confirmSlot, 0, ContainerInput.PICKUP, player);
+				countRound(player);
+				attemptedSlots.clear();
+				state = State.FILL;
+				timer = CONFIRM_DELAY_TICKS;
+				checkRoundLimit();
+				return;
+			}
+
 			closingByMacro = true;
 
 			try {
@@ -307,7 +333,31 @@ public final class SellMacro {
 		finishRound(player);
 	}
 
-	private static void finishRound(LocalPlayer player) {
+	/**
+	 * The confirm button is an item in the GUI's own slots that isn't one of the items being sold.
+	 * With several candidates (e.g. glass pane decoration) the one named like a confirm button wins,
+	 * otherwise the last one, since confirm buttons usually sit in the bottom right corner.
+	 */
+	private static int findConfirmSlot(AbstractContainerMenu menu) {
+		Slot named = null;
+		Slot last = null;
+
+		for (Slot slot : menu.slots) {
+			if (slot.container instanceof Inventory || !slot.hasItem() || items.contains(slot.getItem().getItem())) {
+				continue;
+			}
+
+			last = slot;
+
+			if (named == null && CONFIRM_NAME.matcher(slot.getItem().getHoverName().getString()).find()) {
+				named = slot;
+			}
+		}
+
+		return named != null ? named.index : last != null ? last.index : NO_CONFIRM;
+	}
+
+	private static void countRound(LocalPlayer player) {
 		if (movedThisRound > 0) {
 			rounds++;
 			totalMoved += movedThisRound;
@@ -315,16 +365,23 @@ public final class SellMacro {
 		}
 
 		movedThisRound = 0;
-		attemptedSlots.clear();
-		containerId = -1;
-		state = State.SEND_COMMAND;
-		timer = REOPEN_DELAY_TICKS;
+	}
 
+	private static void checkRoundLimit() {
 		int maxRounds = SellMacroConfig.get().maxRounds;
 
 		if (maxRounds > 0 && rounds >= maxRounds) {
 			stop(Component.literal("Runden-Limit von " + maxRounds + " erreicht."));
 		}
+	}
+
+	private static void finishRound(LocalPlayer player) {
+		countRound(player);
+		attemptedSlots.clear();
+		containerId = -1;
+		state = State.SEND_COMMAND;
+		timer = REOPEN_DELAY_TICKS;
+		checkRoundLimit();
 	}
 
 	private static String roundStatus() {

@@ -142,6 +142,15 @@ public final class SellMacroClient implements ClientModInitializer {
 									config.save();
 									return feedback(context, "Verzögerung zwischen zwei Klicks auf " + config.clickDelay + " Ticks gesetzt.");
 								})))
+				.then(ClientCommands.literal("confirm")
+						.executes(context -> feedback(context, "Verkaufen über den Bestätigen-Knopf: " + onOff(SellMacroConfig.get().useConfirmButton)))
+						.then(ClientCommands.argument("enabled", BoolArgumentType.bool())
+								.executes(context -> {
+									SellMacroConfig config = SellMacroConfig.get();
+									config.useConfirmButton = BoolArgumentType.getBool(context, "enabled");
+									config.save();
+									return feedback(context, "Verkaufen über den Bestätigen-Knopf: " + onOff(config.useConfirmButton));
+								})))
 				.then(ClientCommands.literal("protect")
 						.executes(context -> feedback(context, "Schutz für umbenannte/verzauberte Items: " + onOff(SellMacroConfig.get().protectSpecialItems)))
 						.then(ClientCommands.argument("enabled", BoolArgumentType.bool())
@@ -293,6 +302,7 @@ public final class SellMacroClient implements ClientModInitializer {
 		SellMacroConfig config = SellMacroConfig.get();
 		feedback(context, "Einstellungen:");
 		feedback(context, "  Klick-Verzögerung: " + config.clickDelay + " Ticks");
+		feedback(context, "  Bestätigen-Knopf statt neu öffnen: " + onOff(config.useConfirmButton));
 		feedback(context, "  Schutz für umbenannte/verzauberte Items: " + onOff(config.protectSpecialItems));
 		feedback(context, "  Stopp bei Schaden: " + onOff(config.stopOnDamage));
 		feedback(context, "  Limits: " + limitsText());
@@ -307,6 +317,7 @@ public final class SellMacroClient implements ClientModInitializer {
 				"/sellmacro stop - Makro beenden",
 				"/sellmacro preset save|delete|list|<name> - Item-Listen speichern und starten",
 				"/sellmacro delay <0-20> - Ticks zwischen zwei Klicks",
+				"/sellmacro confirm <true|false> - mit dem grünen Haken verkaufen statt GUI neu öffnen",
 				"/sellmacro protect <true|false> - umbenannte/verzauberte Items nie verkaufen",
 				"/sellmacro damagestop <true|false> - bei Schaden stoppen",
 				"/sellmacro limit rounds|money <wert> - automatisch stoppen (0 = aus)",

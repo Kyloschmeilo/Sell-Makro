@@ -26,6 +26,8 @@ public final class SellMacroConfig {
 			"(?i)(?:\\$\\s?([0-9][0-9.,]*\\s?[kmb]?)|([0-9][0-9.,]*\\s?[kmb]?)\\s?(?:\\$|€|coins?|münzen|dollar))";
 
 	public int clickDelay = 1;
+	/** Sell with the GUI's confirm button instead of closing and reopening the GUI. */
+	public boolean useConfirmButton = true;
 	/** Never sell stacks that are renamed or enchanted. */
 	public boolean protectSpecialItems = true;
 	public boolean stopOnDamage = true;

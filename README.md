@@ -23,6 +23,7 @@ in deinem Inventar landen.
 | `/sellmacro preset save <name>` | Zuletzt gestartete Items als Preset speichern |
 | `/sellmacro preset <name>` | Preset starten |
 | `/sellmacro preset list` / `delete <name>` | Presets anzeigen / löschen |
+| `/sellmacro confirm <true\|false>` | Mit dem grünen Haken in der GUI verkaufen statt sie neu zu öffnen (Standard an) |
 | `/sellmacro delay <0-20>` | Ticks zwischen zwei Shift-Klicks (`0` = alles im selben Tick, Standard `1`) |
 | `/sellmacro protect <true\|false>` | Umbenannte/verzauberte Items nie verkaufen (Standard an) |
 | `/sellmacro damagestop <true\|false>` | Bei Schaden sofort stoppen und die GUI schließen (Standard an) |
@@ -31,6 +32,10 @@ in deinem Inventar landen.
 | `/sellmacro earnings test <nachricht>` | Prüfen, welcher Betrag in einer Chat-Nachricht erkannt wird |
 | `/sellmacro earnings pattern <regex>` / `reset` | Eigenes Muster für die Geld-Erkennung (erste Gruppe = Betrag) |
 | `/sellmacro settings` | Alle Einstellungen anzeigen |
+
+**Bestätigen-Knopf:** Hat die `/sell` GUI einen Knopf zum Verkaufen (z. B. den grünen Haken unten rechts), klickt die
+Mod ihn nach dem Befüllen an. Die GUI bleibt offen und wird nur geleert, `/sell` wird nicht jede Runde neu gesendet.
+Erkannt wird der Knopf als einziges fremdes Item in der GUI, bei mehreren am Namen (z. B. „Verkaufen“) oder als letztes.
 
 **Taste K** (änderbar unter Steuerung → Sell Macro) startet/stoppt das Makro mit den zuletzt genutzten Items,
 beim ersten Mal mit dem Item in der Hand.

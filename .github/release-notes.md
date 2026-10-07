@@ -2,6 +2,9 @@
 
 Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
 
+### Neu in 1.2.2
+- Verkauft jetzt über den grünen Haken in der /sell GUI: Die GUI bleibt offen und wird nur geleert, statt sie jede Runde zu schließen und mit `/sell` neu zu öffnen. Das sind viel weniger Pakete, also weniger Kick-Gefahr. Der Knopf wird automatisch erkannt. Ohne Knopf oder mit `/sellmacro confirm false` läuft es wie bisher.
+
 ### Neu in 1.2.1
 - Geldbeträge mit Tausender-Punkten: `1.234.567` statt `1.23M`
 - Der Wert pro Stunde ist jetzt der hochgerechnete Schnitt pro Minute seit dem Start (die erste Minute zählt voll, damit ein schneller erster Verkauf keinen riesigen Stundenwert ergibt). Angezeigt werden `/min` und `/h`, beim Stoppen der Schnitt pro Stunde.
