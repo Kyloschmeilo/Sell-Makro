@@ -2,6 +2,11 @@
 
 Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
 
+### Neu in 1.2.4
+- Einstellungs-GUI: `/sellmacro gui` oder Taste **J**. Items eintragen und starten/stoppen, Item in der Hand übernehmen, alle Einstellungen umschalten, Limits setzen.
+- Presets in der GUI: Name eingeben und speichern, mit einem Klick starten, mit X löschen.
+- Auto-Fortsetzen: Nach einem Server-Neustart, Transfer oder Kick wartet das Makro bis zu 10 Minuten, bis du wieder auf einem Server bist, und macht dann mit denselben Items weiter. Klappt `/sell` nicht sofort, wird es 2 Minuten lang immer wieder versucht. Bewusstes Verlassen über „Verbindung trennen“ beendet das Makro. Abschaltbar mit `/sellmacro autoresume false` oder in der GUI.
+
 ### Neu in 1.2.3
 - Ein weiterer Spieler ist freigeschaltet.
 

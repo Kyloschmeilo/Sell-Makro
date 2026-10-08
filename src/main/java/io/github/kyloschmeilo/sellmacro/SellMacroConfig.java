@@ -31,6 +31,8 @@ public final class SellMacroConfig {
 	/** Never sell stacks that are renamed or enchanted. */
 	public boolean protectSpecialItems = true;
 	public boolean stopOnDamage = true;
+	/** Start again automatically after a server restart or transfer. */
+	public boolean autoResume = true;
 	/** Stop after this many rounds, 0 = no limit. */
 	public int maxRounds = 0;
 	/** Stop once this much money was earned, 0 = no limit. */

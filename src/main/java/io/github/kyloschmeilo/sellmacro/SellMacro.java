@@ -52,8 +52,18 @@ public final class SellMacro {
 	public static final int MAX_CLICK_DELAY = 20;
 	public static final int MAX_ITEMS = 9;
 
+	/** How long the macro waits for the player to come back after a disconnect or server transfer. */
+	private static final long RESUME_TIMEOUT_MILLIS = 10 * 60 * 1000;
+	/** Wait after rejoining before sending /sell again, so the server can finish moving the player. */
+	private static final int RESUME_DELAY_TICKS = 100;
+	/** After rejoining, keep trying to open the sell GUI for this long (the server may still be starting). */
+	private static final long RESUME_RETRY_MILLIS = 2 * 60 * 1000;
+	private static final int RESUME_RETRY_DELAY_TICKS = 100;
+
 	private enum State {
 		IDLE,
+		/** Lost the server (restart, transfer): waits for the player to be back in a world. */
+		RESUME_WAIT,
 		SEND_COMMAND,
 		WAIT_FOR_GUI,
 		FILL,
@@ -74,6 +84,10 @@ public final class SellMacro {
 	private static long startedAt;
 	private static float lastHealth;
 	private static boolean closingByMacro;
+	private static long resumeDeadline;
+	private static int resumeTicks;
+	/** Until then a GUI that doesn't open is retried instead of stopping the macro. */
+	private static long retryUntil;
 	/** Menu slot of the green confirm button in the current GUI, or NO_CONFIRM / CONFIRM_UNKNOWN. */
 	private static int confirmSlot = CONFIRM_UNKNOWN;
 
@@ -131,6 +145,7 @@ public final class SellMacro {
 
 	private static void reset() {
 		state = State.IDLE;
+		retryUntil = 0;
 		items.clear();
 		timer = 0;
 		openAttempts = 0;
@@ -189,8 +204,19 @@ public final class SellMacro {
 
 		LocalPlayer player = client.player;
 
+		if (state == State.RESUME_WAIT) {
+			tickResume(client, player);
+			return;
+		}
+
 		if (player == null || client.gameMode == null) {
-			reset();
+			// Disconnected, e.g. kicked during a server restart or transferred to another server.
+			if (SellMacroConfig.get().autoResume) {
+				suspend();
+			} else {
+				reset();
+			}
+
 			return;
 		}
 
@@ -224,6 +250,76 @@ public final class SellMacro {
 		}
 	}
 
+	/** Keeps items and stats, and waits for the player to be back on a server. */
+	private static void suspend() {
+		state = State.RESUME_WAIT;
+		resumeDeadline = System.currentTimeMillis() + RESUME_TIMEOUT_MILLIS;
+		resumeTicks = 0;
+		containerId = -1;
+		confirmSlot = CONFIRM_UNKNOWN;
+		attemptedSlots.clear();
+		movedThisRound = 0;
+	}
+
+	private static void tickResume(Minecraft client, LocalPlayer player) {
+		if (System.currentTimeMillis() > resumeDeadline) {
+			stop(Component.literal("Nicht rechtzeitig wieder verbunden, Makro beendet.").withStyle(ChatFormatting.RED));
+			return;
+		}
+
+		if (player == null || client.gameMode == null || client.level == null) {
+			resumeTicks = 0;
+			return;
+		}
+
+		if (++resumeTicks < RESUME_DELAY_TICKS) {
+			return;
+		}
+
+		lastHealth = player.getHealth();
+		retryUntil = System.currentTimeMillis() + RESUME_RETRY_MILLIS;
+		openAttempts = 0;
+		timer = 0;
+		state = State.SEND_COMMAND;
+		player.sendSystemMessage(prefixed(Component.literal("Wieder verbunden, Makro läuft weiter.").withStyle(ChatFormatting.GREEN)));
+	}
+
+	/**
+	 * Called when the server moves the player to another world or server (respawn packet). The
+	 * sell GUI is gone afterwards, so the macro pauses and starts again once the player has arrived.
+	 */
+	public static void onWorldChange() {
+		if (state != State.IDLE && state != State.RESUME_WAIT && SellMacroConfig.get().autoResume) {
+			suspend();
+		}
+	}
+
+	/** The player left the server on purpose (pause menu): don't resume on the next join. */
+	public static void onManualDisconnect() {
+		if (state != State.IDLE) {
+			reset();
+		}
+	}
+
+	/** Short status for the settings screen. */
+	public static MutableComponent statusText() {
+		return switch (state) {
+			case IDLE -> Component.literal("Gestoppt").withStyle(ChatFormatting.GRAY);
+			case RESUME_WAIT -> Component.literal("Wartet auf Verbindung zum Server ...").withStyle(ChatFormatting.YELLOW);
+			default -> {
+				MutableComponent text = Component.literal("Läuft: ").withStyle(ChatFormatting.GREEN)
+						.append(itemNames(items))
+						.append(" | Runde " + rounds);
+
+				if (earned > 0) {
+					text.append(" | " + Earnings.format(earned) + " verdient");
+				}
+
+				yield text;
+			}
+		};
+	}
+
 	private static void tickSendCommand(Minecraft client, LocalPlayer player) {
 		if (timer > 0) {
 			timer--;
@@ -250,14 +346,17 @@ public final class SellMacro {
 			state = State.FILL;
 			timer = SYNC_DELAY_TICKS;
 			openAttempts = 0;
+			retryUntil = 0;
 			movedThisRound = 0;
 			attemptedSlots.clear();
 		} else if (--timer <= 0) {
-			if (openAttempts >= MAX_OPEN_ATTEMPTS) {
+			boolean retrying = System.currentTimeMillis() < retryUntil;
+
+			if (openAttempts >= MAX_OPEN_ATTEMPTS && !retrying) {
 				stop(Component.literal("Die /" + SELL_COMMAND + " GUI hat sich nicht geöffnet.").withStyle(ChatFormatting.RED));
 			} else {
 				state = State.SEND_COMMAND;
-				timer = REOPEN_DELAY_TICKS;
+				timer = retrying ? RESUME_RETRY_DELAY_TICKS : REOPEN_DELAY_TICKS;
 			}
 		}
 	}

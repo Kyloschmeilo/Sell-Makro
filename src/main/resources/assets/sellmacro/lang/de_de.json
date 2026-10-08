@@ -1,4 +1,5 @@
 {
 	"key.category.sellmacro.main": "Sell Macro",
-	"key.sellmacro.toggle": "Sell-Makro starten/stoppen"
+	"key.sellmacro.toggle": "Sell-Makro starten/stoppen",
+	"key.sellmacro.gui": "Sell-Makro-Einstellungen öffnen"
 }

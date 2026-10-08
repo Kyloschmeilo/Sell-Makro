@@ -1,4 +1,5 @@
 {
 	"key.category.sellmacro.main": "Sell Macro",
-	"key.sellmacro.toggle": "Start/stop sell macro"
+	"key.sellmacro.toggle": "Start/stop sell macro",
+	"key.sellmacro.gui": "Open sell macro settings"
 }

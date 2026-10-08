@@ -42,6 +42,9 @@ public final class SellMacroClient implements ClientModInitializer {
 
 	private static final KeyMapping.Category KEY_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("sellmacro", "main"));
 	private static KeyMapping toggleKey;
+	private static KeyMapping guiKey;
+	/** Set by /sellmacro gui: the chat screen closes after the command, so the screen opens on the next tick. */
+	private static boolean openScreen;
 
 	private static final SuggestionProvider<FabricClientCommandSource> PRESET_SUGGESTIONS = (context, builder) -> {
 		for (String name : SellMacroConfig.get().presets.keySet()) {
@@ -56,10 +59,25 @@ public final class SellMacroClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		toggleKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sellmacro.toggle", GLFW.GLFW_KEY_K, KEY_CATEGORY));
+		guiKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.sellmacro.gui", GLFW.GLFW_KEY_J, KEY_CATEGORY));
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (toggleKey.consumeClick()) {
 				onToggleKey(client);
+			}
+
+			while (guiKey.consumeClick()) {
+				openScreen = true;
+			}
+
+			if (openScreen && client.player != null) {
+				openScreen = false;
+
+				if (AllowedPlayers.isAllowed()) {
+					client.gui.setScreen(new SellMacroScreen());
+				} else {
+					client.player.sendSystemMessage(notAllowedMessage());
+				}
 			}
 
 			SellMacro.tick(client);
@@ -115,6 +133,19 @@ public final class SellMacroClient implements ClientModInitializer {
 		dispatcher.register(ClientCommands.literal("sellmacro")
 				.executes(SellMacroClient::help)
 				.then(ClientCommands.literal("help").executes(SellMacroClient::help))
+				.then(ClientCommands.literal("gui").executes(context -> {
+					openScreen = true;
+					return 1;
+				}))
+				.then(ClientCommands.literal("autoresume")
+						.executes(context -> feedback(context, "Nach Server-Neustart/Transfer automatisch weitermachen: " + onOff(SellMacroConfig.get().autoResume)))
+						.then(ClientCommands.argument("enabled", BoolArgumentType.bool())
+								.executes(context -> {
+									SellMacroConfig config = SellMacroConfig.get();
+									config.autoResume = BoolArgumentType.getBool(context, "enabled");
+									config.save();
+									return feedback(context, "Nach Server-Neustart/Transfer automatisch weitermachen: " + onOff(config.autoResume));
+								})))
 				.then(ClientCommands.literal("stop").executes(context -> {
 					if (!SellMacro.isRunning()) {
 						return error(context, "Das Makro läuft gerade nicht.");
@@ -305,6 +336,7 @@ public final class SellMacroClient implements ClientModInitializer {
 		feedback(context, "  Bestätigen-Knopf statt neu öffnen: " + onOff(config.useConfirmButton));
 		feedback(context, "  Schutz für umbenannte/verzauberte Items: " + onOff(config.protectSpecialItems));
 		feedback(context, "  Stopp bei Schaden: " + onOff(config.stopOnDamage));
+		feedback(context, "  Auto-Fortsetzen nach Neustart/Transfer: " + onOff(config.autoResume));
 		feedback(context, "  Limits: " + limitsText());
 		feedback(context, "  Zuletzt: " + (config.lastItems.isEmpty() ? "-" : String.join(", ", config.lastItems)));
 		return 1;
@@ -312,6 +344,7 @@ public final class SellMacroClient implements ClientModInitializer {
 
 	private static int help(CommandContext<FabricClientCommandSource> context) {
 		String[] lines = {
+				"/sellmacro gui - Einstellungen und Presets (Taste J)",
 				"/sellmacro <item> [item ...] - bis zu " + SellMacro.MAX_ITEMS + " Items verkaufen",
 				"/sellmacro hand - Item in der Hand verkaufen",
 				"/sellmacro stop - Makro beenden",
@@ -320,6 +353,7 @@ public final class SellMacroClient implements ClientModInitializer {
 				"/sellmacro confirm <true|false> - mit dem grünen Haken verkaufen statt GUI neu öffnen",
 				"/sellmacro protect <true|false> - umbenannte/verzauberte Items nie verkaufen",
 				"/sellmacro damagestop <true|false> - bei Schaden stoppen",
+				"/sellmacro autoresume <true|false> - nach Server-Neustart/Transfer weitermachen",
 				"/sellmacro limit rounds|money <wert> - automatisch stoppen (0 = aus)",
 				"/sellmacro earnings pattern|test - Geld-Erkennung im Chat anpassen",
 				"/sellmacro settings - alle Einstellungen",
@@ -337,7 +371,7 @@ public final class SellMacroClient implements ClientModInitializer {
 		return start(items, context.getSource()::sendFeedback) ? 1 : 0;
 	}
 
-	private static boolean start(List<Item> items, java.util.function.Consumer<Component> output) {
+	static boolean start(List<Item> items, java.util.function.Consumer<Component> output) {
 		if (items.isEmpty()) {
 			output.accept(SellMacro.prefixed(Component.literal("Keine gültigen Items.").withStyle(ChatFormatting.RED)));
 			return false;
@@ -355,7 +389,7 @@ public final class SellMacroClient implements ClientModInitializer {
 		return true;
 	}
 
-	private static List<Item> resolve(List<String> ids) {
+	static List<Item> resolve(List<String> ids) {
 		List<Item> items = new ArrayList<>();
 
 		for (String id : ids) {
