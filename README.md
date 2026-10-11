@@ -34,6 +34,7 @@ in deinem Inventar landen.
 | `/sellmacro earnings test <nachricht>` | Prüfen, welcher Betrag in einer Chat-Nachricht erkannt wird |
 | `/sellmacro earnings pattern <regex>` / `reset` | Eigenes Muster für die Geld-Erkennung (erste Gruppe = Betrag) |
 | `/sellmacro settings` | Alle Einstellungen anzeigen |
+| `/sellmacro uuid` | Eigene UUID anzeigen (für die Freischaltung) |
 
 **Bestätigen-Knopf:** Hat die `/sell` GUI einen Knopf zum Verkaufen (z. B. den grünen Haken unten rechts), klickt die
 Mod ihn nach dem Befüllen an. Die GUI bleibt offen und wird nur geleert, `/sell` wird nicht jede Runde neu gesendet.

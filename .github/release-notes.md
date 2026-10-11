@@ -2,6 +2,11 @@
 
 Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
 
+### Neu in 1.2.5
+- Freischaltung per UUID statt Name: Ein Namenswechsel ändert nichts mehr.
+- Die Liste der freigeschalteten Spieler steckt nicht mehr in der Mod, sondern wird online geladen (beim Start und alle 10 Minuten). Neue Spieler freischalten oder sperren geht ohne neue Mod-Version. Ohne Internetverbindung zu GitHub bleibt die Mod gesperrt.
+- `/sellmacro uuid` zeigt die eigene UUID zum Kopieren, auch ohne Freischaltung.
+
 ### Neu in 1.2.4
 - Einstellungs-GUI: `/sellmacro gui` oder Taste **J**. Items eintragen und starten/stoppen, Item in der Hand übernehmen, alle Einstellungen umschalten, Limits setzen.
 - Presets in der GUI: Name eingeben und speichern, mit einem Klick starten, mit X löschen.
