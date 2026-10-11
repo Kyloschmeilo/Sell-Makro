@@ -31,7 +31,9 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.commands.arguments.item.ItemInput;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
@@ -83,6 +85,7 @@ public final class SellMacroClient implements ClientModInitializer {
 			SellMacro.tick(client);
 		});
 		ClientReceiveMessageEvents.GAME.register(SellMacro::onGameMessage);
+		AllowedPlayers.refreshIfStale();
 		ClientCommandRegistrationCallback.EVENT.register(SellMacroClient::registerCommands);
 	}
 
@@ -122,9 +125,13 @@ public final class SellMacroClient implements ClientModInitializer {
 	}
 
 	private static void registerCommands(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandBuildContext buildContext) {
+		// Normally downloaded at startup already; otherwise wait for it once so the right commands get registered.
+		AllowedPlayers.loadNowIfMissing();
+
 		if (!AllowedPlayers.isAllowed()) {
 			dispatcher.register(ClientCommands.literal("sellmacro")
 					.executes(SellMacroClient::notAllowed)
+					.then(ClientCommands.literal("uuid").executes(SellMacroClient::showUuid))
 					.then(ClientCommands.argument("args", StringArgumentType.greedyString())
 							.executes(SellMacroClient::notAllowed)));
 			return;
@@ -133,6 +140,7 @@ public final class SellMacroClient implements ClientModInitializer {
 		dispatcher.register(ClientCommands.literal("sellmacro")
 				.executes(SellMacroClient::help)
 				.then(ClientCommands.literal("help").executes(SellMacroClient::help))
+				.then(ClientCommands.literal("uuid").executes(SellMacroClient::showUuid))
 				.then(ClientCommands.literal("gui").executes(context -> {
 					openScreen = true;
 					return 1;
@@ -357,6 +365,7 @@ public final class SellMacroClient implements ClientModInitializer {
 				"/sellmacro limit rounds|money <wert> - automatisch stoppen (0 = aus)",
 				"/sellmacro earnings pattern|test - Geld-Erkennung im Chat anpassen",
 				"/sellmacro settings - alle Einstellungen",
+				"/sellmacro uuid - deine UUID anzeigen (für die Freischaltung)",
 				"Taste K (änderbar in Steuerung): Makro starten/stoppen"
 		};
 
@@ -425,7 +434,19 @@ public final class SellMacroClient implements ClientModInitializer {
 	}
 
 	private static MutableComponent notAllowedMessage() {
-		return SellMacro.prefixed(Component.literal("Du bist nicht berechtigt, diese Mod zu nutzen.").withStyle(ChatFormatting.RED));
+		return AllowedPlayers.deniedMessage();
+	}
+
+	/** Shows the player's UUID, click to copy, so it can be added to the allow list. */
+	private static int showUuid(CommandContext<FabricClientCommandSource> context) {
+		String uuid = AllowedPlayers.ownUuid().toString();
+		context.getSource().sendFeedback(SellMacro.prefixed(Component.literal("Deine UUID: ")
+				.append(Component.literal(uuid).withStyle(style -> style
+						.withColor(ChatFormatting.AQUA)
+						.withUnderlined(true)
+						.withClickEvent(new ClickEvent.CopyToClipboard(uuid))
+						.withHoverEvent(new HoverEvent.ShowText(Component.literal("Klicken zum Kopieren")))))));
+		return 1;
 	}
 
 	private static int notAllowed(CommandContext<FabricClientCommandSource> context) {
