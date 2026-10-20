@@ -29,6 +29,7 @@ in deinem Inventar landen.
 | `/sellmacro protect <true\|false>` | Umbenannte/verzauberte Items nie verkaufen (Standard an) |
 | `/sellmacro damagestop <true\|false>` | Bei Schaden sofort stoppen und die GUI schließen (Standard an) |
 | `/sellmacro autoresume <true\|false>` | Nach Server-Neustart/Transfer automatisch weitermachen (Standard an) |
+| `/sellmacro idle <minuten>` | Letztes Makro nach so vielen Minuten ohne Eingabe starten (Standard `3`, `0` = aus) |
 | `/sellmacro limit rounds <n>` | Nach n Runden stoppen (`0` = aus) |
 | `/sellmacro limit money <betrag>` | Ab diesem Verdienst stoppen (`0` = aus) |
 | `/sellmacro earnings test <nachricht>` | Prüfen, welcher Betrag in einer Chat-Nachricht erkannt wird |
@@ -43,6 +44,9 @@ Erkannt wird der Knopf als einziges fremdes Item in der GUI, bei mehreren am Nam
 **Auto-Fortsetzen:** Wirst du durch einen Server-Neustart gekickt oder auf einen anderen Server transferiert, wartet
 das Makro bis zu 10 Minuten, bis du wieder auf einem Server bist, und macht dann mit denselben Items weiter. Verlässt du
 den Server selbst über „Verbindung trennen“, wird das Makro beendet.
+
+**AFK-Start:** Hast du 3 Minuten lang weder eine Taste gedrückt noch die Maus bewegt, startet die Mod das zuletzt
+genutzte Makro von selbst. Das klappt auch, wenn Minecraft im Hintergrund läuft.
 
 **Taste K** (änderbar unter Steuerung → Sell Macro) startet/stoppt das Makro mit den zuletzt genutzten Items,
 beim ersten Mal mit dem Item in der Hand.

@@ -33,6 +33,8 @@ public final class SellMacroConfig {
 	public boolean stopOnDamage = true;
 	/** Start again automatically after a server restart or transfer. */
 	public boolean autoResume = true;
+	/** Start the last macro again after this many minutes without input, 0 = off. */
+	public int idleRestartMinutes = 3;
 	/** Stop after this many rounds, 0 = no limit. */
 	public int maxRounds = 0;
 	/** Stop once this much money was earned, 0 = no limit. */

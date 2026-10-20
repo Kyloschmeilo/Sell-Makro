@@ -2,6 +2,10 @@
 
 Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
 
+### Neu in 1.2.6
+- AFK-Start: Hast du 3 Minuten lang keine Taste gedrückt und die Maus nicht bewegt, startet das zuletzt genutzte Makro von selbst. Die Zeit lässt sich mit `/sellmacro idle <minuten>` oder in der GUI („AFK-Start“) ändern, `0` schaltet es ab.
+- Läuft Minecraft im Hintergrund (Alt+Tab), blockiert das automatisch geöffnete Pausemenü das Makro nicht mehr.
+
 ### Neu in 1.2.5
 - Freischaltung per UUID statt Name: Ein Namenswechsel ändert nichts mehr.
 - Die Liste der freigeschalteten Spieler steckt nicht mehr in der Mod, sondern wird online geladen (beim Start und alle 10 Minuten). Neue Spieler freischalten oder sperren geht ohne neue Mod-Version. Ohne Internetverbindung zu GitHub bleibt die Mod gesperrt.

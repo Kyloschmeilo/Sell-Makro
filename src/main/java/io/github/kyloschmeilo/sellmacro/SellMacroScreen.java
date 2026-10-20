@@ -132,18 +132,28 @@ public final class SellMacroScreen extends Screen {
 					config.save();
 				})).setTooltip(Tooltip.create(Component.literal("Ticks zwischen zwei Shift-Klicks. Erhöhen, falls der Server kickt.")));
 
-		EditBox roundsBox = this.addRenderableWidget(new EditBox(this.font, left + 160, y, 150, 20, Component.literal("Runden-Limit")));
+		this.addRenderableWidget(CycleButton.<Integer>builder(value -> Component.literal(value > 0 ? value + " Min." : "aus"), config.idleRestartMinutes)
+				.withValues(idleValues(config.idleRestartMinutes))
+				.create(left + 160, y, 150, 20, Component.literal("AFK-Start"), (button, value) -> {
+					config.idleRestartMinutes = value;
+					config.save();
+				})).setTooltip(Tooltip.create(Component.literal("Das letzte Makro starten, wenn du so lange nichts gedrückt und die Maus nicht bewegt hast")));
+		y += ROW;
+
+		EditBox roundsBox = this.addRenderableWidget(new EditBox(this.font, left, y, 150, 20, Component.literal("Runden-Limit")));
 		roundsBox.setValue(config.maxRounds > 0 ? String.valueOf(config.maxRounds) : "");
 		roundsBox.setHint(Component.literal("Runden-Limit (leer = aus)").withStyle(ChatFormatting.DARK_GRAY));
 		roundsBox.setResponder(value -> config.maxRounds = parseInt(value));
 		y += ROW;
 
-		EditBox moneyBox = this.addRenderableWidget(new EditBox(this.font, left, y, 150, 20, Component.literal("Geld-Limit")));
+		EditBox moneyBox = this.addRenderableWidget(new EditBox(this.font, left + 160, y, 150, 20, Component.literal("Geld-Limit")));
 		moneyBox.setValue(config.moneyLimit > 0 ? Earnings.format(config.moneyLimit) : "");
 		moneyBox.setHint(Component.literal("Geld-Limit (leer = aus)").withStyle(ChatFormatting.DARK_GRAY));
 		moneyBox.setResponder(value -> config.moneyLimit = value.isBlank() ? 0 : Earnings.parseAmount(value));
+		y += ROW;
+
 		this.addRenderableWidget(Button.builder(Component.literal("Fertig"), button -> this.onClose())
-				.bounds(left + 160, y, 150, 20)
+				.bounds(left + 80, y, 150, 20)
 				.build());
 		y += ROW + 2;
 
@@ -297,6 +307,18 @@ public final class SellMacroScreen extends Screen {
 	private void showError(String text) {
 		this.message = Component.literal(text).withStyle(ChatFormatting.RED);
 		this.messageWidget.setMessage(this.message);
+	}
+
+	/** Choices for the AFK start, including a value set by command that isn't one of the presets. */
+	private static List<Integer> idleValues(int current) {
+		List<Integer> values = new ArrayList<>(List.of(0, 1, 2, 3, 5, 10, 15, 30, 60));
+
+		if (!values.contains(current)) {
+			values.add(current);
+			values.sort(null);
+		}
+
+		return values;
 	}
 
 	private static int parseInt(String value) {

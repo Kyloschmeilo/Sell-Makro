@@ -82,6 +82,7 @@ public final class SellMacroClient implements ClientModInitializer {
 				}
 			}
 
+			IdleRestarter.tick(client);
 			SellMacro.tick(client);
 		});
 		ClientReceiveMessageEvents.GAME.register(SellMacro::onGameMessage);
@@ -145,6 +146,15 @@ public final class SellMacroClient implements ClientModInitializer {
 					openScreen = true;
 					return 1;
 				}))
+				.then(ClientCommands.literal("idle")
+						.executes(context -> feedback(context, "Letztes Makro nach Inaktivität starten: " + idleText()))
+						.then(ClientCommands.argument("minutes", IntegerArgumentType.integer(0, 60))
+								.executes(context -> {
+									SellMacroConfig config = SellMacroConfig.get();
+									config.idleRestartMinutes = IntegerArgumentType.getInteger(context, "minutes");
+									config.save();
+									return feedback(context, "Letztes Makro nach Inaktivität starten: " + idleText());
+								})))
 				.then(ClientCommands.literal("autoresume")
 						.executes(context -> feedback(context, "Nach Server-Neustart/Transfer automatisch weitermachen: " + onOff(SellMacroConfig.get().autoResume)))
 						.then(ClientCommands.argument("enabled", BoolArgumentType.bool())
@@ -345,6 +355,7 @@ public final class SellMacroClient implements ClientModInitializer {
 		feedback(context, "  Schutz für umbenannte/verzauberte Items: " + onOff(config.protectSpecialItems));
 		feedback(context, "  Stopp bei Schaden: " + onOff(config.stopOnDamage));
 		feedback(context, "  Auto-Fortsetzen nach Neustart/Transfer: " + onOff(config.autoResume));
+		feedback(context, "  Letztes Makro nach Inaktivität starten: " + idleText());
 		feedback(context, "  Limits: " + limitsText());
 		feedback(context, "  Zuletzt: " + (config.lastItems.isEmpty() ? "-" : String.join(", ", config.lastItems)));
 		return 1;
@@ -362,6 +373,7 @@ public final class SellMacroClient implements ClientModInitializer {
 				"/sellmacro protect <true|false> - umbenannte/verzauberte Items nie verkaufen",
 				"/sellmacro damagestop <true|false> - bei Schaden stoppen",
 				"/sellmacro autoresume <true|false> - nach Server-Neustart/Transfer weitermachen",
+				"/sellmacro idle <minuten> - letztes Makro nach so vielen Minuten ohne Eingabe starten (0 = aus)",
 				"/sellmacro limit rounds|money <wert> - automatisch stoppen (0 = aus)",
 				"/sellmacro earnings pattern|test - Geld-Erkennung im Chat anpassen",
 				"/sellmacro settings - alle Einstellungen",
@@ -417,6 +429,11 @@ public final class SellMacroClient implements ClientModInitializer {
 		String rounds = config.maxRounds > 0 ? config.maxRounds + " Runden" : "keine Runden-Grenze";
 		String money = config.moneyLimit > 0 ? Earnings.format(config.moneyLimit) + " Geld" : "keine Geld-Grenze";
 		return rounds + ", " + money;
+	}
+
+	private static String idleText() {
+		int minutes = SellMacroConfig.get().idleRestartMinutes;
+		return minutes > 0 ? "nach " + minutes + " Min." : "aus";
 	}
 
 	private static String onOff(boolean value) {
