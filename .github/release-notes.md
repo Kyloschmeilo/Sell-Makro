@@ -2,6 +2,11 @@
 
 Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
 
+### Neu in 1.2.7
+- Auto-Kauf im Auktionshaus (`/ahbuy`): kauft Angebote, deren Name passt, deren Preis höchstens so hoch ist wie angegeben und deren Star-Tool-Restzeit mindestens so lang ist wie angegeben. Beispiel: `/ahbuy add 95m 2d star pickaxe`, dann `/ahbuy start`.
+- Startet im **Testmodus**: passende Angebote werden nur im Chat angezeigt, nicht gekauft. Erst `/ahbuy test false` schaltet echtes Kaufen ein.
+- Budget pro Lauf (`/ahbuy budget 200m`) und Aktualisierungs-Intervall (`/ahbuy refresh 5`). Stoppen mit Taste K, `/ahbuy stop` oder durch Schließen des Auktionshauses.
+
 ### Neu in 1.2.6
 - AFK-Start: Hast du 3 Minuten lang keine Taste gedrückt und die Maus nicht bewegt, startet das zuletzt genutzte Makro von selbst. Die Zeit lässt sich mit `/sellmacro idle <minuten>` oder in der GUI („AFK-Start“) ändern, `0` schaltet es ab.
 - Läuft Minecraft im Hintergrund (Alt+Tab), blockiert das automatisch geöffnete Pausemenü das Makro nicht mehr.

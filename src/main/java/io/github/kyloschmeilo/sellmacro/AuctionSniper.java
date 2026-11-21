@@ -43,7 +43,7 @@ public final class AuctionSniper {
 	private static final Pattern SELLER = Pattern.compile("(?i)verkäufer\\s*:?\\s*(\\S+)");
 	private static final Pattern TOOL_TIME = Pattern.compile("(?i)star-?tool läuft ab in\\s*:?\\s*(.*)");
 	private static final Pattern EXPIRES_HEADER = Pattern.compile("(?i)^\\s*läuft ab in\\s*:?\\s*$");
-	private static final Pattern DURATION_PART = Pattern.compile("(\\d+)\\s*([dhms])\\b", Pattern.CASE_INSENSITIVE);
+	private static final Pattern DURATION_PART = Pattern.compile("(\\d+)\\s*(d|h|min|m|s)(?![a-zäöü])", Pattern.CASE_INSENSITIVE);
 	private static final Pattern CONFIRM_NAME = Pattern.compile("(?iu)\\b(bestätigen|bestätigung|kaufen|confirm|buy|ja|annehmen|accept)\\b");
 
 	private enum State {
@@ -446,7 +446,7 @@ public final class AuctionSniper {
 			seconds += switch (matcher.group(2).toLowerCase(Locale.ROOT)) {
 				case "d" -> value * 86_400;
 				case "h" -> value * 3_600;
-				case "m" -> value * 60;
+				case "m", "min" -> value * 60;
 				default -> value;
 			};
 		}

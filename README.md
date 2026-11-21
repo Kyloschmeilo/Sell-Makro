@@ -58,6 +58,21 @@ mit `/sellmacro earnings test` prüfen und notfalls ein eigenes Muster setzen.
 Falls der Server dich wegen zu schneller Klicks kickt, die Verzögerung erhöhen. Einstellungen und Presets werden in
 `config/sellmacro.json` gespeichert.
 
+## Auto-Kauf im Auktionshaus
+
+| Befehl | Beschreibung |
+| --- | --- |
+| `/ahbuy add <höchstpreis> <mindestzeit> <name>` | Regel anlegen, z. B. `/ahbuy add 95m 2d star pickaxe` |
+| `/ahbuy list` / `remove <nr>` | Regeln anzeigen / löschen |
+| `/ahbuy start` / `stop` | Auto-Kauf starten / stoppen (auch Taste K oder Auktionshaus schließen) |
+| `/ahbuy test <true\|false>` | Testmodus: nur anzeigen statt kaufen (Standard **an**) |
+| `/ahbuy budget <betrag>` | Höchstens so viel pro Lauf ausgeben (`0` = kein Limit) |
+| `/ahbuy refresh <2-60>` | Sekunden zwischen zwei Aktualisierungen (Standard `5`) |
+
+Die Mod öffnet `/ah`, liest bei jedem Angebot aus dem Tooltip `Preis`, `Verkäufer` und `Star-Tool läuft ab in` und kauft
+nur, wenn Name, Höchstpreis und Mindest-Restzeit passen. Danach wird das Auktionshaus neu geladen. Gelesen wird nur die
+erste Seite. Preise: `95000000`, `95.000.000` oder `95m`. Zeiten: `2d`, `36h`, `2d12h`, `0` = egal.
+
 ## Download
 
 Die fertige `sellmacro-<version>.jar` gibt es unter
