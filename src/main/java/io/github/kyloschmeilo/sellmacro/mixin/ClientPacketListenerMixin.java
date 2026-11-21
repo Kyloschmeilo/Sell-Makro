@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
 
+import io.github.kyloschmeilo.sellmacro.AuctionSniper;
 import io.github.kyloschmeilo.sellmacro.SellMacro;
 
 @Mixin(ClientPacketListener.class)
@@ -19,6 +20,7 @@ public abstract class ClientPacketListenerMixin {
 	private void sellmacro$onRespawn(ClientboundRespawnPacket packet, CallbackInfo ci) {
 		if (Minecraft.getInstance().isSameThread()) {
 			SellMacro.onWorldChange();
+			AuctionSniper.onWorldChange();
 		}
 	}
 }

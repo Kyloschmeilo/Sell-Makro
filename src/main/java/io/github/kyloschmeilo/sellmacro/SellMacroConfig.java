@@ -44,6 +44,23 @@ public final class SellMacroConfig {
 	public List<String> lastItems = new ArrayList<>();
 	public Map<String, List<String>> presets = new LinkedHashMap<>();
 
+	/** What the auction house auto-buy looks for. */
+	public List<AuctionRule> auctionRules = new ArrayList<>();
+	/** Test mode: only report matching offers, never buy. On until the player turns it off. */
+	public boolean auctionDryRun = true;
+	/** Most money the auto-buy may spend per run, 0 = no limit. */
+	public double auctionBudget = 0;
+	/** Seconds between two reloads of the auction house. */
+	public int auctionRefreshSeconds = 5;
+
+	public static final class AuctionRule {
+		/** Part of the item name, case does not matter, e.g. "star pickaxe". */
+		public String name = "";
+		public double maxPrice;
+		/** Minimum remaining tool time in seconds ("Star-Tool läuft ab in"), 0 = don't care. */
+		public long minToolSeconds;
+	}
+
 	private static SellMacroConfig instance;
 
 	public static SellMacroConfig get() {
@@ -95,6 +112,13 @@ public final class SellMacroConfig {
 		if (presets == null) {
 			presets = new LinkedHashMap<>();
 		}
+
+		if (auctionRules == null) {
+			auctionRules = new ArrayList<>();
+		}
+
+		auctionRules.removeIf(rule -> rule == null || rule.name == null || rule.name.isBlank());
+		auctionRefreshSeconds = Math.clamp(auctionRefreshSeconds, AuctionSniper.MIN_REFRESH_SECONDS, AuctionSniper.MAX_REFRESH_SECONDS);
 
 		clickDelay = Math.clamp(clickDelay, 0, SellMacro.MAX_CLICK_DELAY);
 	}

@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
+import io.github.kyloschmeilo.sellmacro.AuctionSniper;
 import io.github.kyloschmeilo.sellmacro.SellMacro;
 
 @Mixin(Minecraft.class)
@@ -16,5 +17,6 @@ public abstract class MinecraftMixin {
 	@Inject(method = "disconnectFromWorld", at = @At("HEAD"))
 	private void sellmacro$onDisconnectButton(Component message, CallbackInfo ci) {
 		SellMacro.onManualDisconnect();
+		AuctionSniper.onWorldChange();
 	}
 }

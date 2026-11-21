@@ -84,6 +84,7 @@ public final class SellMacroClient implements ClientModInitializer {
 
 			IdleRestarter.tick(client);
 			SellMacro.tick(client);
+			AuctionSniper.tick(client);
 		});
 		ClientReceiveMessageEvents.GAME.register(SellMacro::onGameMessage);
 		AllowedPlayers.refreshIfStale();
@@ -105,6 +106,11 @@ public final class SellMacroClient implements ClientModInitializer {
 
 		if (SellMacro.isRunning()) {
 			SellMacro.stop(Component.literal("Makro gestoppt."));
+			return;
+		}
+
+		if (AuctionSniper.isRunning()) {
+			AuctionSniper.stop(Component.literal("Auto-Kauf gestoppt."));
 			return;
 		}
 
@@ -135,8 +141,14 @@ public final class SellMacroClient implements ClientModInitializer {
 					.then(ClientCommands.literal("uuid").executes(SellMacroClient::showUuid))
 					.then(ClientCommands.argument("args", StringArgumentType.greedyString())
 							.executes(SellMacroClient::notAllowed)));
+			dispatcher.register(ClientCommands.literal("ahbuy")
+					.executes(SellMacroClient::notAllowed)
+					.then(ClientCommands.argument("args", StringArgumentType.greedyString())
+							.executes(SellMacroClient::notAllowed)));
 			return;
 		}
+
+		AuctionCommands.register(dispatcher);
 
 		dispatcher.register(ClientCommands.literal("sellmacro")
 				.executes(SellMacroClient::help)
@@ -396,6 +408,10 @@ public final class SellMacroClient implements ClientModInitializer {
 		if (items.isEmpty()) {
 			output.accept(SellMacro.prefixed(Component.literal("Keine gültigen Items.").withStyle(ChatFormatting.RED)));
 			return false;
+		}
+
+		if (AuctionSniper.isRunning()) {
+			AuctionSniper.stop(Component.literal("Gestoppt, das Verkaufs-Makro übernimmt."));
 		}
 
 		if (!SellMacro.start(items)) {

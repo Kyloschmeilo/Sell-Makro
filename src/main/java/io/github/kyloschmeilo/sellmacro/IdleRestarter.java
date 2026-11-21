@@ -27,7 +27,7 @@ public final class IdleRestarter {
 		long now = System.currentTimeMillis();
 		LocalPlayer player = client.player;
 
-		if (player == null || client.level == null || player.isDeadOrDying() || SellMacro.isRunning()) {
+		if (player == null || client.level == null || player.isDeadOrDying() || SellMacro.isRunning() || AuctionSniper.isRunning()) {
 			// Only time spent in game without a running macro counts as idle.
 			lastActivity = now;
 			snapshot(client, player);
