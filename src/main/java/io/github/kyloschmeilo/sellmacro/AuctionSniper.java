@@ -29,12 +29,15 @@ import net.minecraft.world.item.component.ItemLore;
  */
 public final class AuctionSniper {
 	private static final String AUCTION_COMMAND = "ah";
-	public static final int MIN_REFRESH_SECONDS = 2;
-	public static final int MAX_REFRESH_SECONDS = 60;
+	/** One game tick: the mod can't click more often than once per tick. */
+	public static final int MIN_REFRESH_MILLIS = 50;
+	public static final int MAX_REFRESH_MILLIS = 60_000;
 	private static final int OPEN_TIMEOUT_TICKS = 60;
 	private static final int MAX_OPEN_ATTEMPTS = 3;
 	/** Wait after the GUI opened so the server can send all offers first. */
 	private static final int SYNC_DELAY_TICKS = 5;
+	/** Wait after clicking the reload button, so the new offers have arrived before scanning. */
+	private static final int REFRESH_SYNC_TICKS = 2;
 	/** How long to wait for a confirm screen after clicking an offer. */
 	private static final int CONFIRM_TIMEOUT_TICKS = 40;
 	private static final int AFTER_BUY_TICKS = 20;
@@ -352,7 +355,7 @@ public final class AuctionSniper {
 			containerId = menu.containerId;
 			Minecraft.getInstance().gameMode.handleContainerInput(containerId, button, 0, ContainerInput.PICKUP, player);
 			state = State.SCAN;
-			timer = SYNC_DELAY_TICKS;
+			timer = REFRESH_SYNC_TICKS;
 			return;
 		}
 
@@ -372,7 +375,8 @@ public final class AuctionSniper {
 	}
 
 	private static int refreshTicks() {
-		return SellMacroConfig.get().auctionRefreshSeconds * 20;
+		// The timer counts game ticks (50 ms each); at least one tick between two reloads.
+		return Math.max(1, Math.round(SellMacroConfig.get().auctionRefreshMillis / 50f));
 	}
 
 	private static AbstractContainerMenu openMenu(LocalPlayer player) {
@@ -534,6 +538,11 @@ public final class AuctionSniper {
 		}
 
 		return text;
+	}
+
+	/** "250 ms" below one second, "2 s" / "1,5 s" above. */
+	public static String formatMillis(int millis) {
+		return millis < 1000 ? millis + " ms" : Earnings.format(millis / 1000.0) + " s";
 	}
 
 	public static MutableComponent prefixed(Component message) {

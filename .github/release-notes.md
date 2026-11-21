@@ -2,6 +2,9 @@
 
 Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
 
+### Neu in 1.2.9
+- Aktualisieren-Intervall des Auto-Kaufs jetzt in Millisekunden, ab 50 ms (= 1 Tick, schneller geht in Minecraft nicht). In der GUI 50 ms bis 60 s, per Befehl `/ahbuy refresh <50-60000>`. Nach dem Klick auf Aktualisieren wird 100 ms auf die neuen Angebote gewartet.
+
 ### Neu in 1.2.8
 - Auto-Kauf aktualisiert mit dem Aktualisieren-Knopf unten links im Auktionshaus, statt `/ah` jedes Mal neu zu öffnen.
 - Neue GUI für den Auto-Kauf (`/ahbuy gui` oder Knopf „Auto-Kauf (AH) ...“ in der Sell-Macro-GUI): mehrere Regeln/Fälle mit Name, Höchstpreis und Mindest-Restzeit, z. B. „bis 95m ab 2 Tagen“ und „bis 50m ab 1 Tag“. Dazu Testmodus, Aktualisieren-Intervall, Budget und Starten/Stoppen.

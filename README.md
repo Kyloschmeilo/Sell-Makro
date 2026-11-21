@@ -68,7 +68,7 @@ Falls der Server dich wegen zu schneller Klicks kickt, die Verzögerung erhöhen
 | `/ahbuy start` / `stop` | Auto-Kauf starten / stoppen (auch Taste K oder Auktionshaus schließen) |
 | `/ahbuy test <true\|false>` | Testmodus: nur anzeigen statt kaufen (Standard **an**) |
 | `/ahbuy budget <betrag>` | Höchstens so viel pro Lauf ausgeben (`0` = kein Limit) |
-| `/ahbuy refresh <2-60>` | Sekunden zwischen zwei Aktualisierungen (Standard `5`) |
+| `/ahbuy refresh <50-60000>` | Millisekunden zwischen zwei Aktualisierungen (Standard `5000`, schnellstes `50` = 1 Tick) |
 
 Die Mod öffnet `/ah`, liest bei jedem Angebot aus dem Tooltip `Preis`, `Verkäufer` und `Star-Tool läuft ab in` und kauft
 nur, wenn Name, Höchstpreis und Mindest-Restzeit einer Regel passen. Mehrere Regeln sind mehrere Fälle, es reicht,

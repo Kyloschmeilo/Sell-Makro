@@ -113,12 +113,12 @@ public final class AuctionScreen extends Screen {
 					this.statusWidget.setMessage(statusText());
 				})).setTooltip(Tooltip.create(Component.literal("Im Testmodus werden passende Angebote nur im Chat angezeigt")));
 
-		this.addRenderableWidget(CycleButton.<Integer>builder(value -> Component.literal(value + " s"), config.auctionRefreshSeconds)
-				.withValues(List.of(2, 3, 5, 10, 15, 30, 60))
+		this.addRenderableWidget(CycleButton.<Integer>builder(value -> Component.literal(AuctionSniper.formatMillis(value)), config.auctionRefreshMillis)
+				.withValues(refreshValues(config.auctionRefreshMillis))
 				.create(left + 160, y, 150, 20, Component.literal("Aktualisieren"), (button, value) -> {
-					config.auctionRefreshSeconds = value;
+					config.auctionRefreshMillis = value;
 					config.save();
-				})).setTooltip(Tooltip.create(Component.literal("Sekunden zwischen zwei Klicks auf den Aktualisieren-Knopf")));
+				})).setTooltip(Tooltip.create(Component.literal("Zeit zwischen zwei Klicks auf den Aktualisieren-Knopf. 50 ms (1 Tick) ist das Schnellste, sehr kurze Zeiten können einen Kick geben.")));
 		y += ROW;
 
 		EditBox budget = this.addRenderableWidget(new EditBox(this.font, left, y, 150, 20, Component.literal("Budget")));
@@ -180,6 +180,18 @@ public final class AuctionScreen extends Screen {
 		// Close first: the auto-buy waits until no screen is open before it sends /ah.
 		this.minecraft.gui.setScreen(null);
 		AuctionSniper.start(player);
+	}
+
+	/** Choices from one tick (50 ms) up to a minute, plus a value set by command. */
+	private static List<Integer> refreshValues(int current) {
+		java.util.ArrayList<Integer> values = new java.util.ArrayList<>(List.of(50, 100, 150, 200, 250, 500, 750, 1000, 2000, 3000, 5000, 10000, 30000, 60000));
+
+		if (!values.contains(current)) {
+			values.add(current);
+			values.sort(null);
+		}
+
+		return values;
 	}
 
 	private Component startLabel() {

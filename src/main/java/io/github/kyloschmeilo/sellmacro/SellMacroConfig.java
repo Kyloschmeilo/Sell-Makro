@@ -50,8 +50,8 @@ public final class SellMacroConfig {
 	public boolean auctionDryRun = true;
 	/** Most money the auto-buy may spend per run, 0 = no limit. */
 	public double auctionBudget = 0;
-	/** Seconds between two reloads of the auction house. */
-	public int auctionRefreshSeconds = 5;
+	/** Milliseconds between two reloads of the auction house (50 ms = one game tick is the fastest). */
+	public int auctionRefreshMillis = 5000;
 
 	public static final class AuctionRule {
 		/** Part of the item name, case does not matter, e.g. "star pickaxe". */
@@ -118,7 +118,7 @@ public final class SellMacroConfig {
 		}
 
 		auctionRules.removeIf(rule -> rule == null || rule.name == null || rule.name.isBlank());
-		auctionRefreshSeconds = Math.clamp(auctionRefreshSeconds, AuctionSniper.MIN_REFRESH_SECONDS, AuctionSniper.MAX_REFRESH_SECONDS);
+		auctionRefreshMillis = Math.clamp(auctionRefreshMillis, AuctionSniper.MIN_REFRESH_MILLIS, AuctionSniper.MAX_REFRESH_MILLIS);
 
 		clickDelay = Math.clamp(clickDelay, 0, SellMacro.MAX_CLICK_DELAY);
 	}

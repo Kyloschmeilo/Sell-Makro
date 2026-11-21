@@ -82,13 +82,13 @@ final class AuctionCommands {
 									return feedback(context, "Budget pro Lauf: " + budgetText());
 								})))
 				.then(ClientCommands.literal("refresh")
-						.executes(context -> feedback(context, "Auktionshaus neu laden alle " + SellMacroConfig.get().auctionRefreshSeconds + " Sekunden"))
-						.then(ClientCommands.argument("seconds", IntegerArgumentType.integer(AuctionSniper.MIN_REFRESH_SECONDS, AuctionSniper.MAX_REFRESH_SECONDS))
+						.executes(context -> feedback(context, "Auktionshaus aktualisieren alle " + AuctionSniper.formatMillis(SellMacroConfig.get().auctionRefreshMillis)))
+						.then(ClientCommands.argument("millis", IntegerArgumentType.integer(AuctionSniper.MIN_REFRESH_MILLIS, AuctionSniper.MAX_REFRESH_MILLIS))
 								.executes(context -> {
 									SellMacroConfig config = SellMacroConfig.get();
-									config.auctionRefreshSeconds = IntegerArgumentType.getInteger(context, "seconds");
+									config.auctionRefreshMillis = IntegerArgumentType.getInteger(context, "millis");
 									config.save();
-									return feedback(context, "Auktionshaus neu laden alle " + config.auctionRefreshSeconds + " Sekunden");
+									return feedback(context, "Auktionshaus aktualisieren alle " + AuctionSniper.formatMillis(config.auctionRefreshMillis));
 								}))));
 	}
 
@@ -133,7 +133,7 @@ final class AuctionCommands {
 		}
 
 		feedback(context, "Testmodus: " + onOff(config.auctionDryRun) + ", Budget: " + budgetText()
-				+ ", neu laden alle " + config.auctionRefreshSeconds + " s");
+				+ ", aktualisieren alle " + AuctionSniper.formatMillis(config.auctionRefreshMillis));
 		return config.auctionRules.size();
 	}
 
@@ -146,7 +146,7 @@ final class AuctionCommands {
 				"/ahbuy start | stop - Auto-Kauf starten/stoppen (oder Auktionshaus schließen)",
 				"/ahbuy test <true|false> - Testmodus: nur anzeigen statt kaufen (Standard an)",
 				"/ahbuy budget <betrag> - höchstens so viel pro Lauf ausgeben (0 = kein Limit)",
-				"/ahbuy refresh <2-60> - Sekunden zwischen zwei Aktualisierungen"
+				"/ahbuy refresh <50-60000> - Millisekunden zwischen zwei Aktualisierungen (50 = schnellstes, 1 Tick)"
 		};
 
 		for (String line : lines) {
