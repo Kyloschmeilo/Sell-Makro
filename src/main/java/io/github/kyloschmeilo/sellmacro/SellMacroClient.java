@@ -46,7 +46,7 @@ public final class SellMacroClient implements ClientModInitializer {
 	private static KeyMapping toggleKey;
 	private static KeyMapping guiKey;
 	/** Set by /sellmacro gui: the chat screen closes after the command, so the screen opens on the next tick. */
-	private static boolean openScreen;
+	private static java.util.function.Supplier<net.minecraft.client.gui.screens.Screen> pendingScreen;
 
 	private static final SuggestionProvider<FabricClientCommandSource> PRESET_SUGGESTIONS = (context, builder) -> {
 		for (String name : SellMacroConfig.get().presets.keySet()) {
@@ -69,14 +69,15 @@ public final class SellMacroClient implements ClientModInitializer {
 			}
 
 			while (guiKey.consumeClick()) {
-				openScreen = true;
+				pendingScreen = SellMacroScreen::new;
 			}
 
-			if (openScreen && client.player != null) {
-				openScreen = false;
+			if (pendingScreen != null && client.player != null) {
+				java.util.function.Supplier<net.minecraft.client.gui.screens.Screen> screen = pendingScreen;
+				pendingScreen = null;
 
 				if (AllowedPlayers.isAllowed()) {
-					client.gui.setScreen(new SellMacroScreen());
+					client.gui.setScreen(screen.get());
 				} else {
 					client.player.sendSystemMessage(notAllowedMessage());
 				}
@@ -155,7 +156,7 @@ public final class SellMacroClient implements ClientModInitializer {
 				.then(ClientCommands.literal("help").executes(SellMacroClient::help))
 				.then(ClientCommands.literal("uuid").executes(SellMacroClient::showUuid))
 				.then(ClientCommands.literal("gui").executes(context -> {
-					openScreen = true;
+					openLater(SellMacroScreen::new);
 					return 1;
 				}))
 				.then(ClientCommands.literal("idle")
@@ -402,6 +403,11 @@ public final class SellMacroClient implements ClientModInitializer {
 
 	private static int start(CommandContext<FabricClientCommandSource> context, List<Item> items) {
 		return start(items, context.getSource()::sendFeedback) ? 1 : 0;
+	}
+
+	/** Opens a screen on the next tick, after the chat screen of the command has closed. */
+	static void openLater(java.util.function.Supplier<net.minecraft.client.gui.screens.Screen> screen) {
+		pendingScreen = screen;
 	}
 
 	static boolean start(List<Item> items, java.util.function.Consumer<Component> output) {

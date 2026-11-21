@@ -23,6 +23,10 @@ final class AuctionCommands {
 				.executes(AuctionCommands::help)
 				.then(ClientCommands.literal("help").executes(AuctionCommands::help))
 				.then(ClientCommands.literal("list").executes(AuctionCommands::list))
+				.then(ClientCommands.literal("gui").executes(context -> {
+					SellMacroClient.openLater(() -> new AuctionScreen(null));
+					return 1;
+				}))
 				.then(ClientCommands.literal("start").executes(context ->
 						AuctionSniper.start(context.getSource().getPlayer()) ? 1 : 0))
 				.then(ClientCommands.literal("stop").executes(context -> {
@@ -135,6 +139,7 @@ final class AuctionCommands {
 
 	private static int help(CommandContext<FabricClientCommandSource> context) {
 		String[] lines = {
+				"/ahbuy gui - Regeln und Einstellungen in einer GUI",
 				"/ahbuy add <höchstpreis> <mindestzeit> <name> - Regel, z. B. /ahbuy add 95m 2d star pickaxe",
 				"   Mindestzeit = Star-Tool-Restzeit (z. B. 2d, 36h, 0 = egal)",
 				"/ahbuy list - Regeln anzeigen, /ahbuy remove <nr> - Regel löschen",

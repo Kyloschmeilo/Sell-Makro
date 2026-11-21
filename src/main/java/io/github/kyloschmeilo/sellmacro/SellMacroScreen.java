@@ -152,8 +152,12 @@ public final class SellMacroScreen extends Screen {
 		moneyBox.setResponder(value -> config.moneyLimit = value.isBlank() ? 0 : Earnings.parseAmount(value));
 		y += ROW;
 
+		this.addRenderableWidget(Button.builder(Component.literal("Auto-Kauf (AH) ..."), button -> this.minecraft.gui.setScreen(new AuctionScreen(this)))
+				.bounds(left, y, 150, 20)
+				.tooltip(Tooltip.create(Component.literal("Regeln für den Auto-Kauf im Auktionshaus")))
+				.build());
 		this.addRenderableWidget(Button.builder(Component.literal("Fertig"), button -> this.onClose())
-				.bounds(left + 80, y, 150, 20)
+				.bounds(left + 160, y, 150, 20)
 				.build());
 		y += ROW + 2;
 

@@ -44,6 +44,8 @@ public final class AuctionSniper {
 	private static final Pattern TOOL_TIME = Pattern.compile("(?i)star-?tool läuft ab in\\s*:?\\s*(.*)");
 	private static final Pattern EXPIRES_HEADER = Pattern.compile("(?i)^\\s*läuft ab in\\s*:?\\s*$");
 	private static final Pattern DURATION_PART = Pattern.compile("(\\d+)\\s*(d|h|min|m|s)(?![a-zäöü])", Pattern.CASE_INSENSITIVE);
+	/** Name of the auction house's reload button (bottom left), if it has one. */
+	private static final Pattern REFRESH_NAME = Pattern.compile("(?iu)aktualisier|refresh|neu laden|reload");
 	private static final Pattern CONFIRM_NAME = Pattern.compile("(?iu)\\b(bestätigen|bestätigung|kaufen|confirm|buy|ja|annehmen|accept)\\b");
 
 	private enum State {
@@ -75,6 +77,8 @@ public final class AuctionSniper {
 	private static double spent;
 	private static int bought;
 	private static boolean closingBySniper;
+	/** Menu slot of the reload button in the auction house, -1 if none was found. */
+	private static int refreshSlot = -1;
 
 	private AuctionSniper() {
 	}
@@ -130,6 +134,7 @@ public final class AuctionSniper {
 		timer = 0;
 		openAttempts = 0;
 		containerId = -1;
+		refreshSlot = -1;
 		pending = null;
 		knownButtons.clear();
 		reported.clear();
@@ -283,6 +288,7 @@ public final class AuctionSniper {
 			return;
 		}
 
+		refreshSlot = findRefreshSlot(menu);
 		player.sendOverlayMessage(prefixed(Component.literal("AH: " + offers + " Angebote gelesen, " + matches + " passend"
 				+ (bought > 0 ? ", " + bought + " gekauft" : ""))));
 		state = State.WAIT_REFRESH;
@@ -337,7 +343,20 @@ public final class AuctionSniper {
 			return;
 		}
 
-		if (openMenu(player) != null) {
+		AbstractContainerMenu menu = openMenu(player);
+		// Only in the auction house that was scanned: after a purchase a confirm screen may be open instead.
+		int button = state == State.WAIT_REFRESH && menu != null && menu.containerId == containerId ? refreshSlot : -1;
+
+		if (button >= 0) {
+			// Reload with the auction house's own button: the GUI stays open, no new /ah needed.
+			containerId = menu.containerId;
+			Minecraft.getInstance().gameMode.handleContainerInput(containerId, button, 0, ContainerInput.PICKUP, player);
+			state = State.SCAN;
+			timer = SYNC_DELAY_TICKS;
+			return;
+		}
+
+		if (menu != null) {
 			closingBySniper = true;
 
 			try {
@@ -366,11 +385,43 @@ public final class AuctionSniper {
 		return menu != null && menu.containerId == containerId ? menu : null;
 	}
 
+	/**
+	 * The reload button: an item in the auction house's own slots named like "Aktualisieren", otherwise
+	 * the item in the bottom left corner of the GUI, as long as it isn't an offer.
+	 */
+	private static int findRefreshSlot(AbstractContainerMenu menu) {
+		int ownSlots = 0;
+
+		for (Slot slot : menu.slots) {
+			if (slot.container instanceof Inventory) {
+				continue;
+			}
+
+			ownSlots++;
+
+			if (slot.hasItem() && REFRESH_NAME.matcher(slot.getItem().getHoverName().getString()).find()) {
+				return slot.index;
+			}
+		}
+
+		int bottomLeft = ownSlots - 9;
+
+		if (bottomLeft >= 0 && bottomLeft < menu.slots.size()) {
+			Slot slot = menu.slots.get(bottomLeft);
+
+			if (!(slot.container instanceof Inventory) && slot.hasItem() && parse(slot.getItem()) == null) {
+				return slot.index;
+			}
+		}
+
+		return -1;
+	}
+
 	static SellMacroConfig.AuctionRule matchingRule(Listing listing, List<SellMacroConfig.AuctionRule> rules) {
 		String name = listing.name().toLowerCase(Locale.ROOT);
 
 		for (SellMacroConfig.AuctionRule rule : rules) {
-			if (!name.contains(rule.name.toLowerCase(Locale.ROOT)) || listing.price() > rule.maxPrice) {
+			if (!isValid(rule) || !name.contains(rule.name.toLowerCase(Locale.ROOT)) || listing.price() > rule.maxPrice) {
 				continue;
 			}
 
@@ -382,6 +433,11 @@ public final class AuctionSniper {
 		}
 
 		return null;
+	}
+
+	/** A rule that is still being typed (no name, no price, broken time) never buys anything. */
+	public static boolean isValid(SellMacroConfig.AuctionRule rule) {
+		return rule.name != null && !rule.name.isBlank() && rule.maxPrice > 0 && rule.minToolSeconds >= 0;
 	}
 
 	private static boolean isConfirmButton(ItemStack stack) {
