@@ -62,6 +62,7 @@ Falls der Server dich wegen zu schneller Klicks kickt, die Verzögerung erhöhen
 
 | Befehl | Beschreibung |
 | --- | --- |
+| `/ahbuy gui` | Regeln und Einstellungen in einer GUI (auch über die Sell-Macro-GUI) |
 | `/ahbuy add <höchstpreis> <mindestzeit> <name>` | Regel anlegen, z. B. `/ahbuy add 95m 2d star pickaxe` |
 | `/ahbuy list` / `remove <nr>` | Regeln anzeigen / löschen |
 | `/ahbuy start` / `stop` | Auto-Kauf starten / stoppen (auch Taste K oder Auktionshaus schließen) |
@@ -70,7 +71,8 @@ Falls der Server dich wegen zu schneller Klicks kickt, die Verzögerung erhöhen
 | `/ahbuy refresh <2-60>` | Sekunden zwischen zwei Aktualisierungen (Standard `5`) |
 
 Die Mod öffnet `/ah`, liest bei jedem Angebot aus dem Tooltip `Preis`, `Verkäufer` und `Star-Tool läuft ab in` und kauft
-nur, wenn Name, Höchstpreis und Mindest-Restzeit passen. Danach wird das Auktionshaus neu geladen. Gelesen wird nur die
+nur, wenn Name, Höchstpreis und Mindest-Restzeit einer Regel passen. Mehrere Regeln sind mehrere Fälle, es reicht,
+wenn eine passt. Aktualisiert wird mit dem Knopf unten links im Auktionshaus. Gelesen wird nur die
 erste Seite. Preise: `95000000`, `95.000.000` oder `95m`. Zeiten: `2d`, `36h`, `2d12h`, `0` = egal.
 
 ## Download

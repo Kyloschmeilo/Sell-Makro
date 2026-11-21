@@ -2,6 +2,11 @@
 
 Füllt die `/sell` GUI des Servers immer wieder mit Items, bis du sie selbst schließt.
 
+### Neu in 1.2.8
+- Auto-Kauf aktualisiert mit dem Aktualisieren-Knopf unten links im Auktionshaus, statt `/ah` jedes Mal neu zu öffnen.
+- Neue GUI für den Auto-Kauf (`/ahbuy gui` oder Knopf „Auto-Kauf (AH) ...“ in der Sell-Macro-GUI): mehrere Regeln/Fälle mit Name, Höchstpreis und Mindest-Restzeit, z. B. „bis 95m ab 2 Tagen“ und „bis 50m ab 1 Tag“. Dazu Testmodus, Aktualisieren-Intervall, Budget und Starten/Stoppen.
+- Unvollständige Regeln (kein Name, kein Preis, unlesbare Zeit) kaufen nie etwas.
+
 ### Neu in 1.2.7
 - Auto-Kauf im Auktionshaus (`/ahbuy`): kauft Angebote, deren Name passt, deren Preis höchstens so hoch ist wie angegeben und deren Star-Tool-Restzeit mindestens so lang ist wie angegeben. Beispiel: `/ahbuy add 95m 2d star pickaxe`, dann `/ahbuy start`.
 - Startet im **Testmodus**: passende Angebote werden nur im Chat angezeigt, nicht gekauft. Erst `/ahbuy test false` schaltet echtes Kaufen ein.
